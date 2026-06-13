@@ -68,7 +68,7 @@ export function estadoNorm(p) {
 export const ESTADOS_CANONICOS = ['P', 'S', 'F', 'NS', 'O'];
 
 export function statsDemograficas(personas) {
-  let total = 0, sumaEdad = 0, conEdad = 0, mayores70 = 0, enEdadActiva = 0;
+  let total = 0, sumaEdad = 0, conEdad = 0, mayores70 = 0, enEdadActiva = 0, conVotos = 0;
   const porEstado = { P: 0, S: 0, F: 0, NS: 0, O: 0, otros: 0 };
 
   for (const p of personas) {
@@ -83,6 +83,7 @@ export function statsDemograficas(personas) {
     const est = estadoNorm(p);
     if (ESTADOS_CANONICOS.includes(est)) porEstado[est]++;
     else porEstado.otros++;
+    if ((p['ULTIMOS VOTOS'] || '').trim()) conVotos++;
   }
 
   return {
@@ -90,6 +91,7 @@ export function statsDemograficas(personas) {
     edadMedia: conEdad ? sumaEdad / conEdad : null,
     pctMayores70: conEdad ? (mayores70 / conEdad) * 100 : null,
     enEdadActiva,
+    conVotos,
     porEstado,
   };
 }

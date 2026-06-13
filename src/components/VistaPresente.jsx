@@ -143,48 +143,76 @@ export default function VistaPresente({ t, data }) {
         <p className="panel-nota">{t.vpIIACobertura(iia.obrasConBenef, iia.obrasConPresencia, iia.obrasTotal)}</p>
       </div>
 
-      {/* Comparativa por provincia (solo alcance CPALSJ) */}
+      {/* Composición por provincia: barras apiladas por estado canónico */}
       {comparativa && (
         <div className="panel">
-          <h3>{t.vpComparativa}</h3>
-          <ResponsiveContainer width="100%" height={260}>
+          <h3>{t.vpComposicion}</h3>
+          <ResponsiveContainer width="100%" height={300}>
             <BarChart data={comparativa} margin={{ left: 0, right: 8 }}>
               <XAxis dataKey="provincia" tick={{ fontSize: 10 }} interval={0} angle={-35} textAnchor="end" height={60} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={v => [fmt(v), '']} separator="" />
-              <Bar dataKey="total" fill={COLORS.azul} radius={[4, 4, 0, 0]} />
+              <Tooltip formatter={(v, name) => [fmt(v), name]} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="porEstado.P"  name={t.vpColSacerdotes} stackId="a" fill={ESTADO_COLORS.P} />
+              <Bar dataKey="porEstado.S"  name={t.vpColEscolares}  stackId="a" fill={ESTADO_COLORS.S} />
+              <Bar dataKey="porEstado.F"  name={t.vpColHermanos}   stackId="a" fill={ESTADO_COLORS.F} />
+              <Bar dataKey="porEstado.NS" name={t.vpColNovicios}   stackId="a" fill={ESTADO_COLORS.NS} />
+              <Bar dataKey="porEstado.O"  name={t.vpColObispos}    stackId="a" fill={ESTADO_COLORS.O} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Cantidad de jesuitas por provincia (disposición de la versión 2.0) */}
+      {comparativa && (
+        <div className="panel">
+          <h3>{t.vpComparativa}</h3>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th>{t.vpColProvincia}</th>
-                  <th className="num">{t.vpColTotal}</th>
-                  <th className="num">{t.vpColEdadMedia}</th>
-                  <th className="num">{t.vpColMayores70}</th>
-                  <th className="num">{t.vpColActiva}</th>
-                  <th className="num">P</th>
-                  <th className="num">S</th>
-                  <th className="num">F</th>
-                  <th className="num">NS</th>
+                  <th className="num">{t.vpColSacerdotes}</th>
+                  <th className="num">{t.vpColEscolares}</th>
+                  <th className="num">{t.vpColHermanos}</th>
+                  <th className="num">{t.vpColNovicios}</th>
+                  <th className="num">{t.vpColObispos}</th>
+                  <th className="num col-total">{t.vpColTotal}</th>
+                  <th className="num col-votos">{t.vpColConVotos}</th>
+                  <th className="num">{t.vpColPctCpalsj}</th>
+                  <th className="num">{t.vpColEdadProm}</th>
                 </tr>
               </thead>
               <tbody>
                 {comparativa.map(c => (
                   <tr key={c.provincia}>
                     <td>{c.provincia}</td>
-                    <td className="num"><strong>{fmt(c.total)}</strong></td>
-                    <td className="num">{fmt(c.edadMedia, 1)}</td>
-                    <td className="num">{fmt(c.pctMayores70, 1)}%</td>
-                    <td className="num">{fmt(c.enEdadActiva)}</td>
                     <td className="num">{fmt(c.porEstado.P)}</td>
                     <td className="num">{fmt(c.porEstado.S)}</td>
                     <td className="num">{fmt(c.porEstado.F)}</td>
                     <td className="num">{fmt(c.porEstado.NS)}</td>
+                    <td className="num">{fmt(c.porEstado.O)}</td>
+                    <td className="num col-total"><strong>{fmt(c.total)}</strong></td>
+                    <td className="num col-votos">{fmt(c.conVotos)}</td>
+                    <td className="num">{fmt(c.total / stats.total * 100, 1)}%</td>
+                    <td className="num">{fmt(c.edadMedia, 1)}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr>
+                  <td>{t.vpTotalCpalsj}</td>
+                  <td className="num">{fmt(stats.porEstado.P)}</td>
+                  <td className="num">{fmt(stats.porEstado.S)}</td>
+                  <td className="num">{fmt(stats.porEstado.F)}</td>
+                  <td className="num">{fmt(stats.porEstado.NS)}</td>
+                  <td className="num">{fmt(stats.porEstado.O)}</td>
+                  <td className="num col-total">{fmt(stats.total)}</td>
+                  <td className="num col-votos">{fmt(stats.conVotos)}</td>
+                  <td className="num">100%</td>
+                  <td className="num">{fmt(stats.edadMedia, 1)}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

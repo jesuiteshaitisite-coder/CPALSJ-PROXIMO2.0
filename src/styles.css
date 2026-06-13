@@ -488,6 +488,20 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap;
 }
 
+.table-wrap tfoot tr {
+  background: var(--azul);
+  color: white;
+  font-weight: 700;
+}
+
+.table-wrap tfoot td { border-top: 2px solid var(--acento); }
+
+.table-wrap .col-total { color: var(--acento); font-weight: 700; }
+.table-wrap tbody .col-total strong { color: var(--azul); }
+.table-wrap tbody .col-votos { color: var(--verde-cl); font-weight: 600; }
+.table-wrap tfoot .col-votos { color: #7EE2A8; }
+.table-wrap tfoot .col-total { color: var(--acento); }
+
 /* ── Footer ── */
 
 .app-footer {
