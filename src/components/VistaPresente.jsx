@@ -129,8 +129,6 @@ export default function VistaPresente({ t, data }) {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          <p className="panel-nota">{t.vpPiramideNota}</p>
-          {piramide.sinEdad > 0 && <p className="panel-nota">{t.vpPersonasSinEdad(piramide.sinEdad)}</p>}
         </div>
 
         <div className="panel">
