@@ -17,11 +17,8 @@ export function provinciasDelAlcance({ alcance, provincia, haitiActivo }) {
 
 // ── Filtros base ───────────────────────────────────────────────────────────
 
-export function esRegistroValido(p) {
-  const v = (p['REGISTRO_VALIDO'] || '').trim().toUpperCase();
-  return v !== 'NO';
-}
-
+// NOTA: la spec original excluía filas con REGISTRO_VALIDO=No, pero el
+// usuario decidió (12-jun-2026) que TODA fila presente en el Sheet se cuenta.
 export function provinciaDePersona(p) {
   return normProv(p['PROVINCIA NORM'] || p['PROVINCIA']);
 }
@@ -39,7 +36,7 @@ export function esResidencia(o) {
 export function filtrarPersonas(sheets, provs) {
   const set = new Set(provs);
   return sheets['PERSONAS'].rows.filter(
-    p => esRegistroValido(p) && set.has(provinciaDePersona(p))
+    p => set.has(provinciaDePersona(p))
   );
 }
 

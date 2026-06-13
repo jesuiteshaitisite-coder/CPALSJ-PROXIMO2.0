@@ -50,7 +50,7 @@ export default function VistaPresente({ t, data }) {
   return (
     <div className="vista">
 
-      {/* KPIs */}
+      {/* KPIs (se cuentan todas las filas del Sheet, sin filtro REGISTRO_VALIDO) */}
       <div className="kpi-row">
         <div className="kpi">
           <div className="kpi-valor">{fmt(stats.total)}</div>
