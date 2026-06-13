@@ -1,0 +1,304 @@
+/* ─── CPALSJ PRÓXIMO · estilos globales ───────────────────────────────────── */
+
+:root {
+  --azul:       #1A3A5C;
+  --azul-medio: #2C5F8A;
+  --acento:     #D4A949;
+  --verde:      #1E6F43;
+  --verde-cl:   #27AE60;
+  --ambar:      #E67E22;
+  --rojo:       #A83018;
+  --fondo:      #F4F7FA;
+  --card:       #FFFFFF;
+  --texto:      #1A1A2E;
+  --gris:       #6B7280;
+  --borde:      #E5E7EB;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+button { font-family: inherit; cursor: pointer; }
+
+/* ── Login ── */
+
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--azul) 0%, var(--azul-medio) 100%);
+  padding: 16px;
+}
+
+.login-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 4px solid var(--acento);
+}
+
+.login-logo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--azul);
+  letter-spacing: 0.04em;
+}
+
+.login-logo span { color: var(--acento); }
+
+.login-card h1 { font-size: 1.05rem; color: var(--texto); }
+.login-card p  { font-size: 0.85rem; color: var(--gris); }
+
+.login-card input {
+  padding: 11px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.login-card input:focus { border-color: var(--azul-medio); }
+
+.login-card button {
+  padding: 11px;
+  background: var(--azul);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.login-card button:hover:not(:disabled) { background: var(--azul-medio); }
+.login-card button:disabled { opacity: 0.5; cursor: default; }
+
+.login-error {
+  background: #FEF2F2;
+  color: var(--rojo);
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--rojo);
+}
+
+.login-lang {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+}
+
+.login-lang button {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-weight: 700;
+}
+
+/* ── Header ── */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--azul);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  border-bottom: 3px solid var(--acento);
+  flex-wrap: wrap;
+}
+
+.header-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.control-label { color: rgba(255,255,255,0.85); }
+
+.control select {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.control select option { color: var(--texto); }
+
+.control.toggle input { width: 16px; height: 16px; accent-color: var(--acento); }
+.control.toggle { cursor: pointer; }
+
+.lang-toggle {
+  display: flex;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.lang-toggle button {
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border: none;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.lang-toggle button.active {
+  background: var(--acento);
+  color: var(--azul);
+}
+
+.btn-pdf {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.btn-pdf:disabled { opacity: 0.45; cursor: default; }
+
+.haiti-banner {
+  background: #FEF3C7;
+  color: #92400E;
+  border-bottom: 1px solid #FCD34D;
+  padding: 8px 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  position: sticky;
+  top: 58px;
+  z-index: 99;
+}
+
+/* ── Tabs ── */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: white;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--borde);
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gris);
+}
+
+.tab:hover { color: var(--azul-medio); }
+
+.tab.active {
+  color: var(--azul);
+  border-bottom-color: var(--acento);
+}
+
+/* ── Contenido ── */
+
+.content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  min-height: 50vh;
+}
+
+.status-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 16px;
+  color: var(--gris);
+}
+
+.status-block.error { color: var(--rojo); }
+.status-block.error .error-detail { font-size: 0.85rem; color: var(--gris); }
+
+.status-block.error button {
+  background: var(--azul);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--borde);
+  border-top-color: var(--azul-medio);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.placeholder {
+  background: var(--card);
+  border: 1px dashed var(--borde);
+  border-radius: 10px;
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--gris);
+}
+
+.placeholder h2 { color: var(--azul); margin-bottom: 8px; }
+
+.placeholder .data-ok {
+  margin-top: 20px;
+  color: var(--verde);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── Footer ── */
+
+.app-footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gris);
+  padding: 20px 24px;
+  border-top: 1px solid var(--borde);
+}
