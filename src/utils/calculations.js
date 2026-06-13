@@ -70,6 +70,9 @@ export const ESTADOS_CANONICOS = ['P', 'S', 'F', 'NS', 'O'];
 export function statsDemograficas(personas) {
   let total = 0, sumaEdad = 0, conEdad = 0, mayores70 = 0, enEdadActiva = 0, conVotos = 0;
   const porEstado = { P: 0, S: 0, F: 0, NS: 0, O: 0, otros: 0 };
+  // Jesuitas SIN últimos votos por estado canónico. Escolares (S) y novicios
+  // (NS) aún no hacen los últimos votos, por eso el desglose relevante es P/F/O.
+  const sinVotosPorEstado = { P: 0, S: 0, F: 0, NS: 0, O: 0 };
 
   for (const p of personas) {
     total++;
@@ -83,7 +86,9 @@ export function statsDemograficas(personas) {
     const est = estadoNorm(p);
     if (ESTADOS_CANONICOS.includes(est)) porEstado[est]++;
     else porEstado.otros++;
-    if ((p['ULTIMOS VOTOS'] || '').trim()) conVotos++;
+    const tieneVotos = !!(p['ULTIMOS VOTOS'] || '').trim();
+    if (tieneVotos) conVotos++;
+    else if (ESTADOS_CANONICOS.includes(est)) sinVotosPorEstado[est]++;
   }
 
   return {
@@ -93,6 +98,7 @@ export function statsDemograficas(personas) {
     enEdadActiva,
     conVotos,
     porEstado,
+    sinVotosPorEstado,
   };
 }
 

@@ -91,6 +91,28 @@ export default function VistaPresente({ t, data }) {
           <div className="kpi-valor">{fmt(stats.enEdadActiva)}</div>
           <div className="kpi-label">{t.vpEnEdadActiva}</div>
         </div>
+        <div className="kpi kpi-hover">
+          <div className="kpi-valor">{fmt(stats.conVotos)}</div>
+          <div className="kpi-label">{t.vpKpiConVotos}</div>
+          <div className="kpi-tip">
+            <div className="tt-title">{t.vpSinVotosTitulo}</div>
+            <div className="tt-row">
+              <span className="dot" style={{ background: ESTADO_COLORS.P }} />
+              <span className="tt-name">{t.vpEstados.P} (P)</span>
+              <span className="tt-val">{fmt(stats.sinVotosPorEstado.P)}</span>
+            </div>
+            <div className="tt-row">
+              <span className="dot" style={{ background: ESTADO_COLORS.F }} />
+              <span className="tt-name">{t.vpEstados.F} (F)</span>
+              <span className="tt-val">{fmt(stats.sinVotosPorEstado.F)}</span>
+            </div>
+            <div className="tt-row">
+              <span className="dot" style={{ background: ESTADO_COLORS.O }} />
+              <span className="tt-name">{t.vpEstados.O} (O)</span>
+              <span className="tt-val">{fmt(stats.sinVotosPorEstado.O)}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Pirámide + Estado canónico */}
@@ -240,6 +262,23 @@ export default function VistaPresente({ t, data }) {
           </div>
         </div>
       )}
+
+      {/* Jesuitas por país (columna MAPA): en construcción. Un jesuita pertenece
+          a una provincia, y algunas provincias agrupan más de un país; el dato de
+          país aún está incompleto en el Sheet, por eso no se cuantifica todavía. */}
+      <div className="panel">
+        <h3>{t.vpPaisTitulo}</h3>
+        <div className="panel-construccion">
+          <span className="fc-badge" aria-hidden="true">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5v4.7l3 1.8" />
+            </svg>
+          </span>
+          <span className="fc-sub">{t.vpEnConstruccion}</span>
+        </div>
+      </div>
     </div>
   );
 }

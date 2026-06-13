@@ -38,6 +38,10 @@ export const TEXTS = {
     vpPiramideNota: 'Tramos calculados desde EDAD ACTUAL (la hoja agrupa 60+ en un solo tramo; aquí se abre en 60-69 / 70-79 / 80+).',
     vpEstadoCanonico: 'Estado canónico',
     vpEstados: { P: 'Sacerdotes', S: 'Escolares', F: 'Hermanos', NS: 'Novicios', O: 'Obispos', otros: 'Sin clasificar' },
+    vpKpiConVotos: 'Con últimos votos',
+    vpSinVotosTitulo: 'Sin últimos votos registrados',
+    vpPaisTitulo: 'Jesuitas por país',
+    vpEnConstruccion: 'En construcción.',
     vpImpactoTitulo: 'Impacto apostólico',
     vpImpactoSub: 'En construcción.',
     // IIA (reservado para Presencia Apostólica · Fase 3, aún no se muestra)
@@ -95,6 +99,10 @@ export const TEXTS = {
     vpPiramideNota: 'Faixas calculadas a partir de EDAD ACTUAL (a planilha agrupa 60+ em uma única faixa; aqui se abre em 60-69 / 70-79 / 80+).',
     vpEstadoCanonico: 'Estado canônico',
     vpEstados: { P: 'Sacerdotes', S: 'Escolares', F: 'Irmãos', NS: 'Noviços', O: 'Bispos', otros: 'Sem classificação' },
+    vpKpiConVotos: 'Com últimos votos',
+    vpSinVotosTitulo: 'Sem últimos votos registrados',
+    vpPaisTitulo: 'Jesuítas por país',
+    vpEnConstruccion: 'Em construção.',
     vpImpactoTitulo: 'Impacto apostólico',
     vpImpactoSub: 'Em construção.',
     // IIA (reservado para Presença Apostólica · Fase 3, ainda não exibido)
