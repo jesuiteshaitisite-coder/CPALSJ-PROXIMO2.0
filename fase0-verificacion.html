@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CPALSJ PRÓXIMO — Fase 0: Verificación de datos</title>
+  <style>
+    :root {
+      --azul:       #1A3A5C;
+      --azul-medio: #2C5F8A;
+      --acento:     #D4A949;
+      --verde:      #1E6F43;
+      --verde-cl:   #27AE60;
+      --rojo:       #A83018;
+      --ambar:      #E67E22;
+      --fondo:      #F4F7FA;
+      --fondo-card: #FFFFFF;
+      --texto:      #1A1A2E;
+      --gris:       #6B7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--azul);
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 3px solid var(--acento);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.03em; }
+    header .badge {
+      background: var(--acento);
+      color: var(--azul);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+
+    main { max-width: 1200px; margin: 0 auto; padding: 32px 16px 64px; }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--azul);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 18px;
+      background: var(--acento);
+      border-radius: 2px;
+    }
+
+    .section { margin-bottom: 40px; }
+
+    /* Loading */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+      gap: 16px;
+      color: var(--azul-medio);
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #E5E7EB;
+      border-top-color: var(--azul-medio);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading p { font-size: 0.95rem; color: var(--gris); }
+
+    /* Cards grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--fondo-card);
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--azul);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title span { font-weight: 400; color: var(--gris); text-transform: none; letter-spacing: 0; }
+
+    .pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #EFF6FF;
+      color: var(--azul-medio);
+    }
+
+    .pill.ok     { background: #DCFCE7; color: var(--verde); }
+    .pill.warn   { background: #FEF9C3; color: #92400E; }
+    .pill.opt    { background: #F3F4F6; color: var(--gris); }
+    .pill.error  { background: #FEE2E2; color: var(--rojo); }
+
+    .headers-list {
+      font-size: 0.72rem;
+      color: var(--gris);
+      line-height: 1.8;
+      word-break: break-word;
+    }
+
+    .headers-list code {
+      background: #F3F4F6;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-family: 'Consolas', monospace;
+      font-size: 0.7rem;
+      margin: 1px;
+      display: inline-block;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      background: white;
+    }
+
+    thead tr { background: var(--azul); color: white; }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) { background: #F8FAFC; }
+    tbody tr:hover { background: #EFF6FF; }
+
+    tbody td {
+      padding: 9px 14px;
+      border-top: 1px solid #F1F5F9;
+      white-space: nowrap;
+    }
+
+    tfoot tr { background: #1A3A5C; color: white; font-weight: 700; }
+    tfoot td { padding: 10px 14px; }
+
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .estado-P  { color: var(--azul-medio); font-weight: 600; }
+    .estado-S  { color: var(--verde);      font-weight: 600; }
+    .estado-F  { color: var(--acento);     font-weight: 600; }
+    .estado-NS { color: var(--ambar);      font-weight: 600; }
+    .estado-O  { color: #7C3AED;           font-weight: 600; }
+
+    .tipo-A { color: var(--rojo);   font-weight: 700; }
+    .tipo-B { color: var(--ambar);  font-weight: 700; }
+    .tipo-C { color: var(--verde);  font-weight: 700; }
+    .tipo-R { color: var(--gris);   font-weight: 400; font-style: italic; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .alert.info  { background: #EFF6FF; border-left: 4px solid var(--azul-medio); color: var(--azul); }
+    .alert.warn  { background: #FFFBEB; border-left: 4px solid var(--acento); color: #92400E; }
+    .alert.error { background: #FEF2F2; border-left: 4px solid var(--rojo); color: var(--rojo); }
+
+    #error-global { display: none; }
+
+    footer {
+      text-align: center;
+      color: var(--gris);
+      font-size: 0.75rem;
+      padding: 24px;
+      border-top: 1px solid #E5E7EB;
+      margin-top: 40px;
+    }
+
+    #results { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>CPALSJ PRÓXIMO</h1>
+  <span class="badge">FASE 0 — VERIFICACIÓN DE DATOS</span>
+</header>
+
+<main>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p id="loading-msg">Conectando con Google Sheets…</p>
+  </div>
+
+  <!-- Error global -->
+  <div id="error-global" class="alert error">
+    <span>⚠</span>
+    <span id="error-text"></span>
+  </div>
+
+  <!-- Results (hidden until data loads) -->
+  <div id="results">
+
+    <!-- Summary cards per sheet -->
+    <div class="section">
+      <h2>Hojas detectadas en el Sheet</h2>
+      <div id="sheets-grid" class="grid"></div>
+    </div>
+
+    <!-- Jesuits by province -->
+    <div class="section">
+      <h2>Jesuitas por provincia <span style="font-size:0.8rem;font-weight:400;color:var(--gris);margin-left:8px;">(hoja PERSONAS · REGISTRO_VALIDO=Sí)</span></h2>
+      <div class="alert info">
+        <span>ℹ</span>
+        <span>Solo se cuentan filas con <code>REGISTRO_VALIDO = Sí</code>. El estado canónico usa <code>ESTADO NORMALIZADO</code> (P/S/F/NS/O). El campo <code>ESTADO</code> crudo está descartado.</span>
+      </div>
+      <div class="table-wrap">
+        <table id="personas-table">
+          <thead>
+            <tr>
+              <th>Provincia</th>
+              <th class="num">Sacerdotes (P)</th>
+              <th class="num">Escolares (S)</th>
+              <th class="num">Hermanos (F)</th>
+              <th class="num">Novicios (NS)</th>
+              <th class="num">Obispos (O)</th>
+              <th class="num">Otros</th>
+              <th class="num">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td>TOTAL CPALJ (sin Haití)</td>
+              <td class="num" id="tot-P"></td>
+              <td class="num" id="tot-S"></td>
+              <td class="num" id="tot-F"></td>
+              <td class="num" id="tot-NS"></td>
+              <td class="num" id="tot-O"></td>
+              <td class="num" id="tot-otros"></td>
+              <td class="num" id="tot-total"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Works by type -->
+    <div class="section">
+      <h2>Obras por tipo <span style="font-size:0.8rem;font-weight:400;color:var(--gris);margin-left:8px;">(hoja OBRAS · residencias excluidas de totales)</span></h2>
+      <div class="alert warn">
+        <span>⚠</span>
+        <span>Las filas con <code>TIPO_OBRA = RESIDENCIA</code> o <code>AMBITO = COMUNIDAD</code> <strong>nunca computan como obra apostólica</strong>. Se muestran aparte como referencia informativa.</span>
+      </div>
+      <div class="table-wrap">
+        <table id="obras-table">
+          <thead>
+            <tr>
+              <th>Provincia</th>
+              <th class="num tipo-A">Tipo A</th>
+              <th class="num tipo-B">Tipo B</th>
+              <th class="num tipo-C">Tipo C</th>
+              <th class="num">Subtotal obras</th>
+              <th class="num tipo-R">Residencias*</th>
+              <th class="num">Total filas</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td>TOTAL</td>
+              <td class="num" id="otot-A"></td>
+              <td class="num" id="otot-B"></td>
+              <td class="num" id="otot-C"></td>
+              <td class="num" id="otot-sub"></td>
+              <td class="num" id="otot-R"></td>
+              <td class="num" id="otot-total"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p style="font-size:0.72rem;color:var(--gris);margin-top:8px;">* Residencias = filas con TIPO_OBRA=RESIDENCIA o AMBITO=COMUNIDAD. No computan en ningún cálculo de demanda.</p>
+    </div>
+
+    <!-- Anomalies -->
+    <div class="section" id="anomalias-section" style="display:none;">
+      <h2>Anomalías detectadas</h2>
+      <div id="anomalias-list"></div>
+    </div>
+
+    <!-- Config params -->
+    <div class="section">
+      <h2>Parámetros globales <span style="font-size:0.8rem;font-weight:400;color:var(--gris);margin-left:8px;">(hoja PARAMETROS)</span></h2>
+      <div id="config-table-wrap" class="table-wrap">
+        <table id="config-table">
+          <thead>
+            <tr>
+              <th>CLAVE</th>
+              <th>VALOR</th>
+              <th>DESCRIPCIÓN</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</main>
+
+<footer>
+  CPALSJ PRÓXIMO 3.0 · Fase 0 de 10 · Solo lectura de datos · No toma decisiones
+</footer>
+
+<script>
+// ─── Configuración ─────────────────────────────────────────────────────────
+const SHEET_ID = '1uXVE25b8VDQIQ4HKCRpEC3kauwJElGvRWrrWm3fzoBs';
+
+// La hoja de parámetros se llama PARAMETROS en el Sheet real (la spec la llama CONFIG)
+const SHEET_NAMES = [
+  'PARAMETROS',
+  'PERSONAS',
+  'OBRAS',
+  'RESUMEN_PAIS',
+  'TS_SIN_REP',
+  'REPOSICIÓN',
+  'ESCENARIOS',
+  'VISTA_OBRAS_POR_TIPO',
+  'OBRAS_IMPRESCINDIBLES_PROVINCIA',
+  'SOLIDARIDAD',
+  'MADUREZ_OBRAS',
+];
+
+const OPTIONAL_SHEETS = new Set(['SOLIDARIDAD', 'MADUREZ_OBRAS', 'OBRAS_IMPRESCINDIBLES_PROVINCIA']);
+
+// Hojas cuyos encabezados de fila 1 se pierden en gviz (columnas tipadas como
+// número anulan el texto del header). Estructura confirmada por el usuario.
+const SHEET_HEADER_OVERRIDES = {
+  'ESCENARIOS': ['PROVINCIA', 'AÑO', 'TOTAL HOY < 85', 'TOTAL SIN REPOSICIÓN'],
+};
+
+const PROVINCIAS_OFICIALES = new Set([
+  'CHILE', 'ARU', 'BRASIL', 'COLOMBIA', 'MEXICO',
+  'CAM', 'CARIBE', 'PERU', 'VENEZUELA', 'ECUADOR',
+  'BOLIVIA', 'PARAGUAY',
+]);
+
+// ─── Normalización ─────────────────────────────────────────────────────────
+
+function normHeader(h) {
+  return (h || '')
+    .replace(/\s+/g, ' ')      // collapse whitespace/newlines to single space
+    .replace(/\s*_\s*/g, '_')  // remove spaces around underscores (e.g. "TIPO _OBRA" → "TIPO_OBRA")
+    .trim();
+}
+
+function normProv(p) {
+  if (!p) return '';
+  // Remove diacritics, uppercase
+  const s = String(p).trim()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ');
+  // Aliases
+  const MAP = {
+    'BRASIL': 'BRASIL', 'BRAZIL': 'BRASIL',
+    'ARU': 'ARU', 'ARGENTINA URUGUAY': 'ARU',
+    'CAM': 'CAM', 'CENTROAMERICA': 'CAM', 'CENTRO AMERICA': 'CAM',
+    'PERU': 'PERU',
+  };
+  return MAP[s] || s;
+}
+
+function normTipoObra(t) {
+  return (t || '').trim().toUpperCase();
+}
+
+function normAmbito(a) {
+  return (a || '').trim().toUpperCase();
+}
+
+function isResidencia(row, headers) {
+  const tipo = normTipoObra(getField(row, headers, 'TIPO_OBRA'));
+  const ambito = normAmbito(getField(row, headers, 'AMBITO'));
+  return tipo === 'RESIDENCIA' || ambito === 'COMUNIDAD';
+}
+
+// ─── gviz/tq fetcher ───────────────────────────────────────────────────────
+
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+
+  // Strip JSONP wrapper: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?\s*$/);
+  if (!match) throw new Error('Formato de respuesta inesperado');
+
+  const parsed = JSON.parse(match[1]);
+  if (parsed.status === 'error') {
+    const msgs = (parsed.errors || []).map(e => e.detailed_message || e.message).join('; ');
+    throw new Error(msgs || 'Error de Google Sheets');
+  }
+
+  // Extract headers and rows
+  let cols = (parsed.table?.cols || []).map(c => normHeader(c.label || c.id || ''));
+  let rows = (parsed.table?.rows || []).map(r => {
+    return (r.c || []).map((cell, i) => (cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : ''));
+  });
+
+  // Si gviz devuelve etiquetas genéricas de columna (A, B, C, …, AA, AB…),
+  // los encabezados reales están en la PRIMERA FILA de datos: promoverla.
+  // Solo si TODAS las etiquetas no vacías son genéricas (una hoja real puede
+  // tener columnas vacías a la derecha etiquetadas O, P, Q… sin ser genérica).
+  const nonEmpty = cols.filter(c => c);
+  const allGeneric = nonEmpty.length === 0 || nonEmpty.every(c => /^[A-Z]{1,2}$/.test(c));
+  const override = SHEET_HEADER_OVERRIDES[sheetName];
+  if (override && allGeneric) {
+    // Encabezados conocidos posicionalmente; descartar la fila 1 si es el header
+    if (rows.length > 0 && normHeader(rows[0][0]).toUpperCase() === normHeader(override[0]).toUpperCase()) {
+      rows = rows.slice(1);
+    }
+    cols = cols.map((c, i) => override[i] ? normHeader(override[i]) : '');
+  } else if (rows.length > 0 && allGeneric && nonEmpty.length > 0) {
+    cols = rows[0].map(v => normHeader(v));
+    rows = rows.slice(1);
+  }
+
+  // Skip if completely empty
+  if (cols.length === 0 || rows.length === 0) return { headers: cols, rows: [], raw: [] };
+
+  // Convert to objects
+  const objects = rows.map(r => {
+    const obj = {};
+    cols.forEach((h, i) => { obj[h] = r[i] || ''; });
+    return obj;
+  });
+
+  return { headers: cols, rows: objects, raw: rows };
+}
+
+// ─── Field accessor ────────────────────────────────────────────────────────
+
+function getField(row, headers, fieldName) {
+  // Direct match
+  if (row[fieldName] !== undefined) return row[fieldName];
+  // Case-insensitive match
+  const lower = fieldName.toLowerCase();
+  for (const h of headers) {
+    if (h.toLowerCase() === lower) return row[h] || '';
+  }
+  return '';
+}
+
+// ─── Main loader ───────────────────────────────────────────────────────────
+
+async function loadAll() {
+  const loading = document.getElementById('loading');
+  const results = document.getElementById('results');
+  const loadingMsg = document.getElementById('loading-msg');
+
+  const sheetData = {};
+  const anomalies = [];
+
+  // Load all sheets in parallel
+  loadingMsg.textContent = 'Cargando todas las hojas en paralelo…';
+
+  const loadResults = await Promise.allSettled(
+    SHEET_NAMES.map(name => fetchSheet(name).then(data => ({ name, data })))
+  );
+
+  // Process results
+  for (const result of loadResults) {
+    if (result.status === 'fulfilled') {
+      sheetData[result.value.name] = result.value.data;
+    } else {
+      const name = SHEET_NAMES[loadResults.indexOf(result)];
+      sheetData[name] = null;
+      if (!OPTIONAL_SHEETS.has(name)) {
+        anomalies.push({ level: 'error', msg: `Hoja "${name}" no se pudo cargar: ${result.reason?.message || result.reason}` });
+      }
+    }
+  }
+
+  // Detectar fallback de gviz: si se pide una hoja inexistente, Google devuelve
+  // la PRIMERA hoja (PARAMETROS) sin avisar. Si otra hoja trae los mismos
+  // headers que PARAMETROS, es ese fallback → tratarla como inexistente.
+  const paramHeaders = JSON.stringify(sheetData['PARAMETROS']?.headers || []);
+  for (const name of SHEET_NAMES) {
+    if (name === 'PARAMETROS' || !sheetData[name]) continue;
+    if (JSON.stringify(sheetData[name].headers) === paramHeaders) {
+      sheetData[name] = null;
+      if (!OPTIONAL_SHEETS.has(name)) {
+        anomalies.push({ level: 'warn', msg: `La hoja "${name}" no existe en el Sheet (Google devolvió la primera hoja en su lugar).` });
+      }
+    }
+  }
+
+  // ── Render sheet summary cards ──────────────────────────────────────────
+  const grid = document.getElementById('sheets-grid');
+  for (const name of SHEET_NAMES) {
+    const d = sheetData[name];
+    const isOpt = OPTIONAL_SHEETS.has(name);
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    if (!d) {
+      card.innerHTML = `
+        <div class="card-title">${name} <span class="pill ${isOpt ? 'opt' : 'error'}">${isOpt ? 'Opcional · vacía' : 'Error'}</span></div>
+        <p style="font-size:0.78rem;color:var(--gris)">No disponible${isOpt ? ' (OK, se ignora)' : ''}</p>`;
+    } else {
+      const rowCount = d.rows.length;
+      const hCount = d.headers.filter(h => h).length;
+      const status = rowCount > 0 ? 'ok' : (isOpt ? 'opt' : 'warn');
+      const statusLabel = rowCount > 0 ? `${rowCount} filas` : (isOpt ? 'Vacía (opt.)' : 'Sin datos');
+
+      card.innerHTML = `
+        <div class="card-title">${name} <span class="pill ${status}">${statusLabel}</span></div>
+        <p style="font-size:0.78rem;color:var(--gris);margin-bottom:8px;">${hCount} columna${hCount !== 1 ? 's' : ''}</p>
+        <div class="headers-list">${d.headers.filter(h => h).map(h => `<code>${h}</code>`).join(' ')}</div>`;
+    }
+
+    grid.appendChild(card);
+  }
+
+  // ── Process PERSONAS ────────────────────────────────────────────────────
+  const personasData = sheetData['PERSONAS'];
+  const provStats = {};
+
+  if (personasData && personasData.rows.length > 0) {
+    const headers = personasData.headers;
+
+    // Check required fields exist
+    const required = ['PROVINCIA', 'REGISTRO_VALIDO', 'ESTADO NORMALIZADO'];
+    for (const f of required) {
+      if (!headers.includes(f) && !headers.some(h => h.toLowerCase() === f.toLowerCase())) {
+        anomalies.push({ level: 'warn', msg: `Campo "${f}" no encontrado en PERSONAS. Headers: ${headers.join(', ')}` });
+      }
+    }
+
+    for (const row of personasData.rows) {
+      const regValido = (getField(row, headers, 'REGISTRO_VALIDO') || '').trim();
+      if (regValido === 'No' || regValido === 'NO') continue; // skip invalid
+
+      const provRaw = getField(row, headers, 'PROVINCIA NORM') || getField(row, headers, 'PROVINCIA_NORM') || getField(row, headers, 'PROVINCIA');
+      const prov = normProv(provRaw) || 'SIN_PROVINCIA';
+
+      const estadoNorm = (getField(row, headers, 'ESTADO NORMALIZADO') || '').trim().toUpperCase();
+      const fuerza = getField(row, headers, 'FUERZAS APOSTOLICA') || getField(row, headers, 'FUERZA APOSTOLICA') || '';
+
+      // Check for #REF! in FUERZA APOSTOLICA (treat as empty, don't crash)
+      if (fuerza === '#REF!') {
+        // silently ignore
+      }
+
+      if (!provStats[prov]) {
+        provStats[prov] = { P: 0, S: 0, F: 0, NS: 0, O: 0, otros: 0, total: 0 };
+      }
+
+      provStats[prov].total++;
+      if (['P', 'S', 'F', 'NS', 'O'].includes(estadoNorm)) {
+        provStats[prov][estadoNorm]++;
+      } else {
+        provStats[prov].otros++;
+        if (estadoNorm && estadoNorm !== '') {
+          anomalies.push({ level: 'warn', msg: `ESTADO NORMALIZADO desconocido: "${estadoNorm}" (provincia ${prov})` });
+        }
+      }
+    }
+
+    // Render persons table
+    const tbody = document.querySelector('#personas-table tbody');
+    const totals = { P: 0, S: 0, F: 0, NS: 0, O: 0, otros: 0, total: 0 };
+
+    // Sort: official provinces first, then others
+    const provList = Object.keys(provStats).sort((a, b) => {
+      const ao = PROVINCIAS_OFICIALES.has(a) ? 0 : 1;
+      const bo = PROVINCIAS_OFICIALES.has(b) ? 0 : 1;
+      if (ao !== bo) return ao - bo;
+      return a.localeCompare(b);
+    });
+
+    for (const prov of provList) {
+      const s = provStats[prov];
+      const isHaiti = prov === 'HAITI' || prov === 'HAÏTI';
+      const tr = document.createElement('tr');
+      if (isHaiti) tr.style.opacity = '0.65';
+      tr.innerHTML = `
+        <td>${prov}${isHaiti ? ' <em style="font-size:0.7rem;color:var(--gris)">(latente)</em>' : ''}</td>
+        <td class="num estado-P">${s.P || ''}</td>
+        <td class="num estado-S">${s.S || ''}</td>
+        <td class="num estado-F">${s.F || ''}</td>
+        <td class="num estado-NS">${s.NS || ''}</td>
+        <td class="num estado-O">${s.O || ''}</td>
+        <td class="num">${s.otros || ''}</td>
+        <td class="num" style="font-weight:600">${s.total}</td>
+      `;
+      tbody.appendChild(tr);
+
+      if (!isHaiti) {
+        for (const k of Object.keys(totals)) totals[k] += s[k] || 0;
+      }
+    }
+
+    // Footer totals
+    for (const k of ['P', 'S', 'F', 'NS', 'O', 'otros', 'total']) {
+      const el = document.getElementById(`tot-${k}`);
+      if (el) el.textContent = totals[k] || 0;
+    }
+
+    // Detect provinces with many missing ESTADO NORMALIZADO
+    const missingEstado = personasData.rows.filter(r => {
+      const rv = (getField(r, headers, 'REGISTRO_VALIDO') || '').trim();
+      if (rv === 'No' || rv === 'NO') return false;
+      const en = (getField(r, headers, 'ESTADO NORMALIZADO') || '').trim();
+      return !en;
+    }).length;
+
+    if (missingEstado > 0) {
+      anomalies.push({ level: 'warn', msg: `${missingEstado} jesuitas sin ESTADO NORMALIZADO (se cuentan en "Otros")` });
+    }
+
+  } else {
+    anomalies.push({ level: 'error', msg: 'Hoja PERSONAS no disponible o vacía' });
+  }
+
+  // ── Process OBRAS ───────────────────────────────────────────────────────
+  const obrasData = sheetData['OBRAS'];
+  const obraStats = {};
+
+  if (obrasData && obrasData.rows.length > 0) {
+    const headers = obrasData.headers;
+
+    for (const row of obrasData.rows) {
+      const provRaw = getField(row, headers, 'PROVINCIA_NORM') || getField(row, headers, 'PROVINCIA NORM') || getField(row, headers, 'PROVINCIA');
+      const prov = normProv(provRaw) || 'SIN_PROVINCIA';
+      const tipo = normTipoObra(getField(row, headers, 'TIPO_OBRA'));
+      const ambito = normAmbito(getField(row, headers, 'AMBITO'));
+      const esRes = tipo === 'RESIDENCIA' || ambito === 'COMUNIDAD';
+
+      if (!obraStats[prov]) {
+        obraStats[prov] = { A: 0, B: 0, C: 0, R: 0, otros: 0, total: 0 };
+      }
+
+      obraStats[prov].total++;
+
+      if (esRes) {
+        obraStats[prov].R++;
+      } else if (['A', 'B', 'C'].includes(tipo)) {
+        obraStats[prov][tipo]++;
+      } else {
+        obraStats[prov].otros++;
+        if (tipo && tipo !== '') {
+          anomalies.push({ level: 'warn', msg: `TIPO_OBRA desconocido: "${tipo}" en provincia ${prov}` });
+        }
+      }
+    }
+
+    // Render obras table
+    const tbody = document.querySelector('#obras-table tbody');
+    const totals = { A: 0, B: 0, C: 0, R: 0, otros: 0, total: 0 };
+
+    const provList = Object.keys(obraStats).sort((a, b) => {
+      const ao = PROVINCIAS_OFICIALES.has(a) ? 0 : 1;
+      const bo = PROVINCIAS_OFICIALES.has(b) ? 0 : 1;
+      if (ao !== bo) return ao - bo;
+      return a.localeCompare(b);
+    });
+
+    for (const prov of provList) {
+      const s = obraStats[prov];
+      const subtotal = s.A + s.B + s.C + s.otros;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${prov}</td>
+        <td class="num tipo-A">${s.A || ''}</td>
+        <td class="num tipo-B">${s.B || ''}</td>
+        <td class="num tipo-C">${s.C || ''}</td>
+        <td class="num" style="font-weight:600">${subtotal || ''}</td>
+        <td class="num tipo-R">${s.R || ''}</td>
+        <td class="num">${s.total}</td>
+      `;
+      tbody.appendChild(tr);
+
+      for (const k of Object.keys(totals)) totals[k] += s[k] || 0;
+    }
+
+    // Footer
+    const sub = totals.A + totals.B + totals.C + totals.otros;
+    document.getElementById('otot-A').textContent = totals.A;
+    document.getElementById('otot-B').textContent = totals.B;
+    document.getElementById('otot-C').textContent = totals.C;
+    document.getElementById('otot-sub').textContent = sub;
+    document.getElementById('otot-R').textContent = totals.R;
+    document.getElementById('otot-total').textContent = totals.total;
+
+  } else {
+    anomalies.push({ level: 'error', msg: 'Hoja OBRAS no disponible o vacía' });
+  }
+
+  // ── Process PARAMETROS (la "CONFIG" de la spec) ─────────────────────────
+  const configData = sheetData['PARAMETROS'];
+  if (configData && configData.rows.length > 0) {
+    const tbody = document.querySelector('#config-table tbody');
+    for (const row of configData.rows) {
+      const clave = row['CLAVE'] || row['Clave'] || '';
+      if (!clave) continue;
+      const valor = row['VALOR'] || row['Valor'] || '';
+      const desc  = row['DESCRIPCION'] || row['DESCRIPCIÓN'] || row['Descripcion'] || '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><code style="font-family:monospace;font-weight:700">${clave}</code></td><td>${valor}</td><td style="color:var(--gris);font-size:0.8rem">${desc}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // ── Deduplicate and render anomalies ────────────────────────────────────
+  const seen = new Set();
+  const uniqueAnomalies = anomalies.filter(a => {
+    if (seen.has(a.msg)) return false;
+    seen.add(a.msg);
+    return true;
+  });
+
+  if (uniqueAnomalies.length > 0) {
+    const section = document.getElementById('anomalias-section');
+    const list = document.getElementById('anomalias-list');
+    section.style.display = '';
+    for (const a of uniqueAnomalies) {
+      const div = document.createElement('div');
+      div.className = `alert ${a.level}`;
+      div.innerHTML = `<span>${a.level === 'error' ? '✕' : '⚠'}</span><span>${a.msg}</span>`;
+      list.appendChild(div);
+    }
+  }
+
+  // ── Show results ────────────────────────────────────────────────────────
+  loading.style.display = 'none';
+  results.style.display = 'block';
+
+  // Log to console for developer inspection
+  console.group('CPALSJ PRÓXIMO — Fase 0: Resumen de datos');
+  for (const name of SHEET_NAMES) {
+    const d = sheetData[name];
+    console.log(`${name}:`, d ? `${d.rows.length} filas, headers: [${d.headers.filter(h => h).join(', ')}]` : 'no disponible');
+  }
+  console.log('Jesuitas por provincia:', provStats);
+  console.log('Obras por provincia:', obraStats);
+  console.groupEnd();
+}
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadAll().catch(err => {
+    document.getElementById('loading').style.display = 'none';
+    const errEl = document.getElementById('error-global');
+    errEl.style.display = 'flex';
+    document.getElementById('error-text').textContent = `Error inesperado: ${err.message || err}`;
+    console.error('Error en Fase 0:', err);
+  });
+});
+</script>
+</body>
+</html>
