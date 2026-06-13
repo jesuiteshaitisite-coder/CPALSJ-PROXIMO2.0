@@ -5,8 +5,8 @@ import {
 } from 'recharts';
 import { useAppState } from '../state/AppStateContext.jsx';
 import {
-  provinciasDelAlcance, filtrarPersonas, filtrarObras,
-  statsDemograficas, piramideEdad, comparativaProvincias, calcularIIA,
+  provinciasDelAlcance, filtrarPersonas,
+  statsDemograficas, piramideEdad, comparativaProvincias,
 } from '../utils/calculations.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -24,6 +24,31 @@ function fmt(n, dec = 0) {
     : n.toLocaleString('es-CL', { maximumFractionDigits: dec, minimumFractionDigits: dec });
 }
 
+// Tarjeta de hover del gráfico de composición: detalla cada estado y la suma
+// total de la provincia (las barras apiladas no muestran el total por sí solas).
+function TooltipComposicion({ active, payload, label, t }) {
+  if (!active || !payload || !payload.length) return null;
+  // Total real de la provincia (incluye jesuitas sin estado canónico, que no se
+  // dibujan como segmento): coincide con la tabla "Cantidad de jesuitas".
+  const total = payload[0]?.payload?.total ?? payload.reduce((s, p) => s + (p.value || 0), 0);
+  return (
+    <div className="tt-card">
+      <div className="tt-title">{label}</div>
+      {payload.filter(p => p.value > 0).map(p => (
+        <div className="tt-row" key={p.dataKey}>
+          <span className="tt-dot" style={{ background: p.color }} />
+          <span className="tt-name">{p.name}</span>
+          <span className="tt-val">{fmt(p.value)}</span>
+        </div>
+      ))}
+      <div className="tt-total">
+        <span>{t.vpColTotal} {label}</span>
+        <span>{fmt(total)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function VistaPresente({ t, data }) {
   const appState = useAppState();
   const { alcance, provincia, haitiActivo } = appState;
@@ -31,17 +56,15 @@ export default function VistaPresente({ t, data }) {
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
     const personas = filtrarPersonas(data.sheets, provs);
-    const obras = filtrarObras(data.sheets, provs);
     return {
       provs,
       stats: statsDemograficas(personas),
       piramide: piramideEdad(personas),
-      iia: calcularIIA(obras),
       comparativa: alcance === 'cpalsj' ? comparativaProvincias(data.sheets, provs) : null,
     };
   }, [data, alcance, provincia, haitiActivo]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { stats, piramide, iia, comparativa } = calc;
+  const { stats, piramide, comparativa } = calc;
 
   const estadoData = Object.entries(stats.porEstado)
     .filter(([, n]) => n > 0)
@@ -126,21 +149,21 @@ export default function VistaPresente({ t, data }) {
         </div>
       </div>
 
-      {/* IIA */}
-      <div className="panel iia-panel">
-        <h3>{t.vpIIATitulo}</h3>
-        {iia.iia !== null ? (
-          <>
-            <div className="iia-valor">
-              {fmt(iia.iia, 0)} <span className="kpi-unidad">{t.vpBeneficiarios}</span>
-            </div>
-            <p className="iia-detalle">{t.vpIIADetalle(iia.benef, iia.asignados)}</p>
-          </>
-        ) : (
-          <p className="iia-detalle">{t.vpIIASinDatos}</p>
-        )}
-        <div className="nota-limitacion">⚠ {t.vpIIANota}</div>
-        <p className="panel-nota">{t.vpIIACobertura(iia.obrasConBenef, iia.obrasConPresencia, iia.obrasTotal)}</p>
+      {/* Impacto apostólico: en construcción. El IIA se retiró de la Vista General
+          porque la cobertura de beneficiarios en el Sheet es insuficiente (~3% de
+          obras); se cuantificará en la vista Presencia Apostólica (Fase 3). */}
+      <div className="franja-construccion">
+        <span className="fc-badge" aria-hidden="true">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7.5v4.7l3 1.8" />
+          </svg>
+        </span>
+        <div className="fc-texto">
+          <span className="fc-titulo">{t.vpImpactoTitulo}</span>
+          <span className="fc-sub">{t.vpImpactoSub}</span>
+        </div>
       </div>
 
       {/* Composición por provincia: barras apiladas por estado canónico */}
@@ -151,7 +174,7 @@ export default function VistaPresente({ t, data }) {
             <BarChart data={comparativa} margin={{ left: 0, right: 8 }}>
               <XAxis dataKey="provincia" tick={{ fontSize: 10 }} interval={0} angle={-35} textAnchor="end" height={60} />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v, name) => [fmt(v), name]} />
+              <Tooltip content={<TooltipComposicion t={t} />} cursor={{ fill: 'rgba(0,0,0,0.04)' }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="porEstado.P"  name={t.vpColSacerdotes} stackId="a" fill={ESTADO_COLORS.P} />
               <Bar dataKey="porEstado.S"  name={t.vpColEscolares}  stackId="a" fill={ESTADO_COLORS.S} />

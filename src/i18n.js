@@ -38,6 +38,9 @@ export const TEXTS = {
     vpPiramideNota: 'Tramos calculados desde EDAD ACTUAL (la hoja agrupa 60+ en un solo tramo; aquí se abre en 60-69 / 70-79 / 80+).',
     vpEstadoCanonico: 'Estado canónico',
     vpEstados: { P: 'Sacerdotes', S: 'Escolares', F: 'Hermanos', NS: 'Novicios', O: 'Obispos', otros: 'Sin clasificar' },
+    vpImpactoTitulo: 'Impacto apostólico',
+    vpImpactoSub: 'En construcción — se cuantificará en la vista Presencia Apostólica, con datos sólidos.',
+    // IIA (reservado para Presencia Apostólica · Fase 3, aún no se muestra)
     vpIIATitulo: 'IIA — Índice de Impacto Apostólico',
     vpIIADetalle: (benef, asignados) => `${benef.toLocaleString('es')} beneficiarios / ${asignados.toLocaleString('es')} jesuitas presentes en obras`,
     vpIIANota: 'Limitación metodológica: los beneficiarios son heterogéneos entre tipos de obra y muchos campos BENEF. están vacíos. El índice es orientativo, no una medida exacta.',
@@ -92,6 +95,9 @@ export const TEXTS = {
     vpPiramideNota: 'Faixas calculadas a partir de EDAD ACTUAL (a planilha agrupa 60+ em uma única faixa; aqui se abre em 60-69 / 70-79 / 80+).',
     vpEstadoCanonico: 'Estado canônico',
     vpEstados: { P: 'Sacerdotes', S: 'Escolares', F: 'Irmãos', NS: 'Noviços', O: 'Bispos', otros: 'Sem classificação' },
+    vpImpactoTitulo: 'Impacto apostólico',
+    vpImpactoSub: 'Em construção — será quantificado na visão Presença Apostólica, com dados sólidos.',
+    // IIA (reservado para Presença Apostólica · Fase 3, ainda não exibido)
     vpIIATitulo: 'IIA — Índice de Impacto Apostólico',
     vpIIADetalle: (benef, asignados) => `${benef.toLocaleString('pt')} beneficiários / ${asignados.toLocaleString('pt')} jesuítas presentes em obras`,
     vpIIANota: 'Limitação metodológica: os beneficiários são heterogêneos entre tipos de obra e muitos campos BENEF. estão vazios. O índice é orientativo, não uma medida exata.',

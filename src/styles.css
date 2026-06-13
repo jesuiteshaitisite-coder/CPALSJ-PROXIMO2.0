@@ -502,6 +502,92 @@ button { font-family: inherit; cursor: pointer; }
 .table-wrap tfoot .col-votos { color: #7EE2A8; }
 .table-wrap tfoot .col-total { color: var(--acento); }
 
+/* ── Franja "en construcción" (impacto apostólico) ── */
+
+.franja-construccion {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);
+  border-radius: 10px;
+  padding: 16px 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.fc-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(212, 169, 73, 0.13);
+  color: var(--acento);
+  flex: none;
+}
+
+.fc-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fc-titulo {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--azul);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fc-sub {
+  font-size: 0.84rem;
+  color: var(--gris);
+}
+
+/* ── Tarjeta de hover (tooltip) del gráfico de composición ── */
+
+.tt-card {
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+  font-size: 0.8rem;
+  min-width: 160px;
+}
+
+.tt-card .tt-title {
+  font-weight: 700;
+  color: var(--azul);
+  margin-bottom: 6px;
+}
+
+.tt-card .tt-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 3px 0;
+}
+
+.tt-card .tt-dot { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.tt-card .tt-name { flex: 1; color: var(--texto); }
+.tt-card .tt-val { font-variant-numeric: tabular-nums; color: var(--gris); }
+
+.tt-card .tt-total {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid var(--borde);
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-weight: 700;
+  color: var(--azul);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Footer ── */
 
 .app-footer {
