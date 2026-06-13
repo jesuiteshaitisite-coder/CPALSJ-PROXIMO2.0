@@ -384,6 +384,73 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 6px;
 }
 
+/* Estado canónico: dona + lista de cifras */
+
+.estado-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 560px) { .estado-layout { grid-template-columns: 1fr; } }
+
+.estado-chart { position: relative; }
+
+.estado-centro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.estado-centro-num {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--azul);
+  font-variant-numeric: tabular-nums;
+}
+
+.estado-centro-label {
+  font-size: 0.65rem;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.estado-lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+.estado-lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.estado-lista .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.estado-nombre { color: var(--texto); flex: 1; }
+
+.estado-cifra {
+  color: var(--gris);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.estado-cifra strong { color: var(--azul); }
+
 .table-wrap {
   overflow-x: auto;
   margin-top: 16px;

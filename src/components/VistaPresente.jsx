@@ -90,19 +90,39 @@ export default function VistaPresente({ t, data }) {
 
         <div className="panel">
           <h3>{t.vpEstadoCanonico}</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={estadoData} dataKey="value" nameKey="name"
-                cx="50%" cy="50%" innerRadius={55} outerRadius={95}
-                paddingAngle={2}
-              >
-                {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
-              </Pie>
-              <Tooltip formatter={v => [fmt(v), '']} separator="" />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className="estado-layout">
+            <div className="estado-chart">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={estadoData} dataKey="value" nameKey="name"
+                    cx="50%" cy="50%" innerRadius={58} outerRadius={92}
+                    paddingAngle={2}
+                    label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                    labelLine={false}
+                  >
+                    {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
+                  </Pie>
+                  <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / stats.total * 100, 1)}%)`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="estado-centro">
+                <div className="estado-centro-num">{fmt(stats.total)}</div>
+                <div className="estado-centro-label">{t.vpColTotal}</div>
+              </div>
+            </div>
+            <ul className="estado-lista">
+              {estadoData.map(d => (
+                <li key={d.key}>
+                  <span className="dot" style={{ background: ESTADO_COLORS[d.key] }} />
+                  <span className="estado-nombre">{d.name}</span>
+                  <span className="estado-cifra">
+                    <strong>{fmt(d.value)}</strong> · {fmt(d.value / stats.total * 100, 1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
