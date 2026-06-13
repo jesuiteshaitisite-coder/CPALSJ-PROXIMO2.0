@@ -1,0 +1,14 @@
+{
+  // Nombre del proyecto en Cloudflare (debe coincidir con el Worker creado en el dashboard)
+  "name": "cpalsj-proximo-2",
+  "compatibility_date": "2025-06-01",
+
+  // CPALSJ PRÓXIMO es una SPA estática de Vite: no hay código de servidor (Worker),
+  // solo se sirven los archivos compilados en dist/. "single-page-application"
+  // hace que cualquier ruta desconocida devuelva index.html (la app no usa router,
+  // pero esto evita errores 404 al refrescar).
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
