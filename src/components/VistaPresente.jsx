@@ -86,9 +86,13 @@ export default function VistaPresente({ t, data }) {
 
   const { stats, piramide, fuerza, ingreso, comparativa } = calc;
 
-  const estadoData = Object.entries(stats.porEstado)
-    .filter(([, n]) => n > 0)
-    .map(([k, n]) => ({ name: `${t.vpEstados[k]} (${k})`, key: k, value: n }));
+  // Estado canónico: solo las 5 categorías oficiales P/S/F/NS/O (siempre se
+  // muestra Obispos, aunque sea 0). Los registros "sin clasificar" son errores
+  // de datos a corregir en el Sheet; no se exhiben como categoría en el dash,
+  // pero siguen sumando en el total (stats.total).
+  const ORDEN_ESTADO = ['P', 'S', 'F', 'NS', 'O'];
+  const estadoData = ORDEN_ESTADO
+    .map(k => ({ name: `${t.vpEstados[k]} (${k})`, key: k, value: stats.porEstado[k] || 0 }));
 
   const fuerzaData = FUERZA_ORDEN
     .filter(f => fuerza.conteo[f] > 0)
