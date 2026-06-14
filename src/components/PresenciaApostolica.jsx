@@ -17,21 +17,6 @@ function fmt(n) {
   return n === null || n === undefined ? '—' : n.toLocaleString('es-CL');
 }
 
-// Etiqueta de % DENTRO del anillo de la dona (evita números "sueltos" fuera).
-const RADIAN = Math.PI / 180;
-function etiquetaPorcentaje({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
-  if (percent <= 0.04) return null;
-  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="#fff" stroke="rgba(0,0,0,0.28)" strokeWidth={3} paintOrder="stroke"
-          fontSize={12} fontWeight={700} textAnchor="middle" dominantBaseline="central">
-      {`${Math.round(percent * 100)}%`}
-    </text>
-  );
-}
-
 export default function PresenciaApostolica({ t, data }) {
   const appState = useAppState();
   const { alcance, provincia, haitiActivo } = appState;
@@ -161,8 +146,6 @@ export default function PresenciaApostolica({ t, data }) {
                       <Pie
                         data={tipoData} dataKey="value" nameKey="name"
                         cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={2}
-                        label={etiquetaPorcentaje}
-                        labelLine={false}
                       >
                         {tipoData.map(d => <Cell key={d.key} fill={TIPO_COLORS[d.key]} />)}
                       </Pie>
