@@ -204,6 +204,55 @@ export function statsIngreso(personas) {
   };
 }
 
+// ── Presencia apostólica (OBRAS) ────────────────────────────────────────────
+// TIPO_OBRA: códigos A/B/C (las residencias se excluyen vía filtrarObras).
+// AMBITO: tipo descriptivo (PARROQUIA, COLEGIO, OBRA SOCIAL…).
+
+export const TIPOS_OBRA = ['A', 'B', 'C'];
+
+export function tipoDeObra(o) {
+  return (o['TIPO_OBRA'] || '').trim().toUpperCase();
+}
+
+export function ambitoDeObra(o) {
+  return (o['AMBITO'] || '').trim();
+}
+
+export function distribObrasPorTipo(obras) {
+  const c = { A: 0, B: 0, C: 0 };
+  for (const o of obras) {
+    const tipo = tipoDeObra(o);
+    if (c[tipo] !== undefined) c[tipo]++;
+  }
+  return c;
+}
+
+export function distribObrasPorAmbito(obras) {
+  const m = {};
+  for (const o of obras) {
+    const a = ambitoDeObra(o) || '(sin ámbito)';
+    m[a] = (m[a] || 0) + 1;
+  }
+  return Object.entries(m)
+    .map(([ambito, n]) => ({ ambito, n }))
+    .sort((a, b) => b.n - a.n);
+}
+
+// Obras computables por provincia, desglosadas por tipo A/B/C.
+export function comparativaObrasProvincias(sheets, provs) {
+  const obras = filtrarObras(sheets, provs);
+  const porProv = {};
+  for (const prov of provs) porProv[prov] = { provincia: prov, total: 0, A: 0, B: 0, C: 0 };
+  for (const o of obras) {
+    const prov = provinciaDeObra(o);
+    if (!porProv[prov]) continue;
+    porProv[prov].total++;
+    const tipo = tipoDeObra(o);
+    if (porProv[prov][tipo] !== undefined) porProv[prov][tipo]++;
+  }
+  return provs.map(p => porProv[p]).sort((a, b) => b.total - a.total);
+}
+
 // ── IIA: Índice de Impacto Apostólico ──────────────────────────────────────
 // IIA = beneficiarios de obras activas / jesuitas asignados a obras activas.
 // El campo OBRA ASIGNADA de PERSONAS está vacío en los datos actuales, por lo

@@ -5,6 +5,7 @@ import { TEXTS } from './i18n.js';
 import Login from './components/Login.jsx';
 import Header from './components/Header.jsx';
 import VistaPresente from './components/VistaPresente.jsx';
+import PresenciaApostolica from './components/PresenciaApostolica.jsx';
 
 const TABS = [
   { id: 'presente',   labelKey: 'tabPresente' },
@@ -53,6 +54,8 @@ function Dashboard() {
         {data && !loading && !error && (
           tab === 'presente' ? (
             <VistaPresente t={t} data={data} />
+          ) : tab === 'obras' ? (
+            <PresenciaApostolica t={t} data={data} />
           ) : (
             <div className="placeholder">
               <h2>{t[TABS.find(tb => tb.id === tab).labelKey]}</h2>

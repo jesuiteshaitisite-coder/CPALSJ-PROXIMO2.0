@@ -830,6 +830,53 @@ button { font-family: inherit; cursor: pointer; }
 .kpi2.is-alert .kpi2-valor { color: var(--alert); }
 .kpi2.is-ok    { border-left-color: var(--ok); }
 .kpi2.is-ok    .kpi2-valor { color: var(--ok); }
+.kpi2.is-muted { border-left-color: var(--gris); }
+.kpi2.is-muted .kpi2-valor { color: var(--gris); }
+
+/* ── Presencia Apostólica: filtros de la tabla de obras ── */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.filtros select {
+  background: var(--card);
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--texto);
+  outline: none;
+}
+
+.filtros select:focus { border-color: var(--azul-medio); }
+
+.filtros-cuenta {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gris);
+}
+
+.table-scroll { max-height: 460px; overflow-y: auto; }
+
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.tabla-vacia {
+  text-align: center;
+  color: var(--gris);
+  padding: 28px 12px;
+  font-size: 0.85rem;
+}
 
 /* ── Pirámide rediseñada (zonas vocacionales) ── */
 
