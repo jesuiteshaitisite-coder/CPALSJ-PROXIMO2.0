@@ -51,6 +51,11 @@ export const TEXTS = {
     vgZonaFormacion: 'En formación',
     vgZonaActiva: 'Edad apostólica activa',
     vgZonaMayores: 'Mayores',
+    vgZonaExplica: {
+      form: 'Tramos de menos de 40 años. Concentran a los jesuitas en formación (escolares y novicios) y a los más jóvenes ya ordenados. Son la base de la pirámide y la fuerza futura.',
+      active: 'Tramos de 40 a 69 años. Franja central de jesuitas en plena capacidad para dirigir obras y sostener el servicio apostólico.',
+      senior: 'Jesuitas de 70 años o más. Incluye la etapa de acompañamiento (70–84) y el retiro (85+), fuera de la plena capacidad de dirección.',
+    },
     vgCalloutTitulo: 'Inversión demográfica crítica',
     vgCalloutTexto: (n80, menor40) => `El grupo 80+ (${n80}) supera en número a todos los grupos menores de 40 años combinados (${menor40}). La base de la pirámide es menor que su cúspide.`,
     vpFuerzaTitulo: 'Fuerza apostólica',
@@ -176,6 +181,11 @@ export const TEXTS = {
     vgZonaFormacion: 'Em formação',
     vgZonaActiva: 'Idade apostólica ativa',
     vgZonaMayores: 'Maiores',
+    vgZonaExplica: {
+      form: 'Faixas de menos de 40 anos. Concentram os jesuítas em formação (escolares e noviços) e os mais jovens já ordenados. São a base da pirâmide e a força futura.',
+      active: 'Faixas de 40 a 69 anos. Faixa central de jesuítas em plena capacidade para dirigir obras e sustentar o serviço apostólico.',
+      senior: 'Jesuítas de 70 anos ou mais. Inclui a etapa de acompanhamento (70–84) e o retiro (85+), fora da plena capacidade de direção.',
+    },
     vgCalloutTitulo: 'Inversão demográfica crítica',
     vgCalloutTexto: (n80, menor40) => `O grupo 80+ (${n80}) supera em número todos os grupos menores de 40 anos combinados (${menor40}). A base da pirâmide é menor que seu topo.`,
     vpFuerzaTitulo: 'Força apostólica',

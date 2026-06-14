@@ -195,9 +195,27 @@ export default function VistaPresente({ t, data }) {
               <h3>{t.vpPiramide}</h3>
               <p className="panel-sub">{t.vgPiramideSub}</p>
               <div className="pir-legend">
-                <span><i style={{ background: 'var(--zone-form)' }} />{t.vgZonaFormacion}</span>
-                <span><i style={{ background: 'var(--zone-active)' }} />{t.vgZonaActiva}</span>
-                <span><i style={{ background: 'var(--zone-senior)' }} />{t.vgZonaMayores}</span>
+                <span>
+                  <i style={{ background: 'var(--zone-form)' }} />{t.vgZonaFormacion}
+                  <div className="tipo-tip">
+                    <div className="tipo-tip-head"><span className="dot" style={{ background: 'var(--zone-form)' }} />{t.vgZonaFormacion}</div>
+                    <p>{t.vgZonaExplica.form}</p>
+                  </div>
+                </span>
+                <span>
+                  <i style={{ background: 'var(--zone-active)' }} />{t.vgZonaActiva}
+                  <div className="tipo-tip">
+                    <div className="tipo-tip-head"><span className="dot" style={{ background: 'var(--zone-active)' }} />{t.vgZonaActiva}</div>
+                    <p>{t.vgZonaExplica.active}</p>
+                  </div>
+                </span>
+                <span>
+                  <i style={{ background: 'var(--zone-senior)' }} />{t.vgZonaMayores}
+                  <div className="tipo-tip">
+                    <div className="tipo-tip-head"><span className="dot" style={{ background: 'var(--zone-senior)' }} />{t.vgZonaMayores}</div>
+                    <p>{t.vgZonaExplica.senior}</p>
+                  </div>
+                </span>
               </div>
               <div className="pir-rows">
                 {pirSorted.map(tr => {

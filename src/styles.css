@@ -900,7 +900,12 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .tipo-item:hover .tipo-tip,
-.fuerza-item:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+.fuerza-item:hover .tipo-tip,
+.pir-legend span:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* Chips de zona de la pirámide: tarjeta abierta hacia la derecha (están a la izquierda) */
+.pir-legend span { position: relative; cursor: help; }
+.pir-legend .tipo-tip { left: 0; right: auto; }
 
 .tipo-tip-head {
   display: flex;
