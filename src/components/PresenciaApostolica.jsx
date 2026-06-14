@@ -39,6 +39,8 @@ export default function PresenciaApostolica({ t, data }) {
   const [fProv, setFProv] = useState('');
   const [fAmb, setFAmb] = useState('');
   const [fTipo, setFTipo] = useState('');
+  const [rProv, setRProv] = useState('');
+  const [rPais, setRPais] = useState('');
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -76,6 +78,22 @@ export default function PresenciaApostolica({ t, data }) {
       (!fTipo || tipoDeObra(o) === fTipo)
     ),
     [obras, fProv, fAmb, fTipo]
+  );
+
+  const residProvincias = useMemo(
+    () => [...new Set(residencias.map(provinciaDeObra).filter(Boolean))].sort(),
+    [residencias]
+  );
+  const residPaises = useMemo(
+    () => [...new Set(residencias.map(o => (o['PAIS'] || '').trim()).filter(Boolean))].sort(),
+    [residencias]
+  );
+  const residFiltradas = useMemo(
+    () => residencias.filter(o =>
+      (!rProv || provinciaDeObra(o) === rProv) &&
+      (!rPais || (o['PAIS'] || '').trim() === rPais)
+    ),
+    [residencias, rProv, rPais]
   );
 
   const heroSub = alcance === 'cpalsj' ? t.paHeroSub : provincia;
@@ -279,6 +297,19 @@ export default function PresenciaApostolica({ t, data }) {
       <div className="panel">
         <h3>{t.paResidenciasTitulo}</h3>
         <p className="panel-sub">{t.paResidenciasNota(residencias.length)}</p>
+        <div className="filtros">
+          {alcance === 'cpalsj' && (
+            <select value={rProv} onChange={e => setRProv(e.target.value)}>
+              <option value="">{t.paFiltroProvincia}: {t.paFiltroTodas}</option>
+              {residProvincias.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          )}
+          <select value={rPais} onChange={e => setRPais(e.target.value)}>
+            <option value="">{t.paFiltroPais}: {t.paFiltroTodos}</option>
+            {residPaises.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <span className="filtros-cuenta">{t.paResidenciasCuenta(residFiltradas.length)}</span>
+        </div>
         <div className="table-wrap table-scroll">
           <table>
             <thead>
@@ -291,7 +322,7 @@ export default function PresenciaApostolica({ t, data }) {
               </tr>
             </thead>
             <tbody>
-              {residencias.map((o, i) => (
+              {residFiltradas.map((o, i) => (
                 <tr key={i}>
                   <td>{o['NOMBRE_OBRA'] || '—'}</td>
                   <td>{provinciaDeObra(o)}</td>
@@ -300,7 +331,7 @@ export default function PresenciaApostolica({ t, data }) {
                   <td className="num">{o['PRESENCIA ACTUAL DE SJS'] || '—'}</td>
                 </tr>
               ))}
-              {residencias.length === 0 && (
+              {residFiltradas.length === 0 && (
                 <tr><td colSpan={5} className="tabla-vacia">{t.paTablaVacia}</td></tr>
               )}
             </tbody>
