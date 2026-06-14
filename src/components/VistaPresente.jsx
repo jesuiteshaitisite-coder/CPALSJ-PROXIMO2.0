@@ -7,6 +7,7 @@ import { useAppState } from '../state/AppStateContext.jsx';
 import {
   provinciasDelAlcance, filtrarPersonas,
   statsDemograficas, piramideEdad, comparativaProvincias,
+  distribucionFuerza, FUERZA_ORDEN, statsIngreso,
 } from '../utils/calculations.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -17,6 +18,14 @@ const ESTADO_COLORS = {
   NS: COLORS.ambar,
   O: '#7C3AED',
   otros: COLORS.gris,
+};
+
+// Fuerza apostólica: del verde (plena fuerza) al gris (retiro)
+const FUERZA_COLORS = {
+  'Plena': COLORS.verde,
+  'Formación': COLORS.azulMedio,
+  'Acompañamiento': COLORS.acento,
+  'Retiro': COLORS.gris,
 };
 
 function fmt(n, dec = 0) {
@@ -60,15 +69,21 @@ export default function VistaPresente({ t, data }) {
       provs,
       stats: statsDemograficas(personas),
       piramide: piramideEdad(personas),
+      fuerza: distribucionFuerza(personas),
+      ingreso: statsIngreso(personas),
       comparativa: alcance === 'cpalsj' ? comparativaProvincias(data.sheets, provs) : null,
     };
   }, [data, alcance, provincia, haitiActivo]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { stats, piramide, comparativa } = calc;
+  const { stats, piramide, fuerza, ingreso, comparativa } = calc;
 
   const estadoData = Object.entries(stats.porEstado)
     .filter(([, n]) => n > 0)
     .map(([k, n]) => ({ name: `${t.vpEstados[k]} (${k})`, key: k, value: n }));
+
+  const fuerzaData = FUERZA_ORDEN
+    .filter(f => fuerza.conteo[f] > 0)
+    .map(f => ({ key: f, name: t.vpFuerzaCategorias[f] || f, value: fuerza.conteo[f] }));
 
   return (
     <div className="vista">
@@ -166,6 +181,71 @@ export default function VistaPresente({ t, data }) {
               ))}
             </ul>
           </div>
+        </div>
+      </div>
+
+      {/* Fuerza apostólica + Ingreso y antigüedad (campos bien poblados) */}
+      <div className="two-cols">
+        <div className="panel">
+          <h3>{t.vpFuerzaTitulo}</h3>
+          <div className="estado-layout">
+            <div className="estado-chart">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={fuerzaData} dataKey="value" nameKey="name"
+                    cx="50%" cy="50%" innerRadius={58} outerRadius={92}
+                    paddingAngle={2}
+                    label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                    labelLine={false}
+                  >
+                    {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
+                  </Pie>
+                  <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / fuerza.total * 100, 1)}%)`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="estado-centro">
+                <div className="estado-centro-num">{fmt(fuerza.total)}</div>
+                <div className="estado-centro-label">{t.vpColTotal}</div>
+              </div>
+            </div>
+            <ul className="estado-lista">
+              {fuerzaData.map(d => (
+                <li key={d.key}>
+                  <span className="dot" style={{ background: FUERZA_COLORS[d.key] }} />
+                  <span className="estado-nombre">{d.name}</span>
+                  <span className="estado-cifra">
+                    <strong>{fmt(d.value)}</strong> · {fmt(d.value / fuerza.total * 100, 1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h3>{t.vpIngresoTitulo}</h3>
+          <div className="ingreso-stats">
+            <div className="ingreso-stat">
+              <div className="ingreso-num">{fmt(ingreso.edadIngresoMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
+              <div className="ingreso-lbl">{t.vpEdadIngresoMedia}</div>
+            </div>
+            <div className="ingreso-stat">
+              <div className="ingreso-num">{fmt(ingreso.antiguedadMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
+              <div className="ingreso-lbl">{t.vpAntiguedadMedia}</div>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={170}>
+            <BarChart data={ingreso.decadas} margin={{ left: 0, right: 8, top: 12 }}>
+              <XAxis dataKey="decada" tick={{ fontSize: 11 }} />
+              <YAxis hide domain={[0, dataMax => dataMax + 4]} />
+              <Tooltip formatter={v => [`${fmt(v, 1)} ${t.vpAnios}`, t.vpEdadIngreso]} />
+              <Bar dataKey="edadIngreso" fill={COLORS.acento} radius={[3, 3, 0, 0]}>
+                <LabelList dataKey="edadIngreso" position="top" style={{ fontSize: 10, fill: COLORS.gris }} formatter={v => fmt(v, 1)} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="panel-nota">{t.vpIngresoSub}</p>
         </div>
       </div>
 

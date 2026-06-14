@@ -141,6 +141,69 @@ export function comparativaProvincias(sheets, provs) {
   }).sort((a, b) => b.total - a.total);
 }
 
+// ── Fuerza apostólica (campo FUERZA APOSTOLICA, bien poblado) ───────────────
+// Capacidad apostólica real, distinta de la demografía: Plena → Retiro.
+
+export const FUERZA_ORDEN = ['Plena', 'Formación', 'Acompañamiento', 'Retiro'];
+
+export function distribucionFuerza(personas) {
+  const conteo = Object.fromEntries(FUERZA_ORDEN.map(f => [f, 0]));
+  let sinDato = 0;
+  for (const p of personas) {
+    const v = (p['FUERZA APOSTOLICA'] || '').trim();
+    if (conteo[v] !== undefined) conteo[v]++;
+    else sinDato++;
+  }
+  const total = FUERZA_ORDEN.reduce((s, f) => s + conteo[f], 0);
+  return { conteo, total, sinDato };
+}
+
+// ── Ingreso y antigüedad ────────────────────────────────────────────────────
+// Edad de ingreso = año de entrada − año de nacimiento (no depende del año
+// actual). Antigüedad = año de referencia del Sheet − año de entrada.
+// Las fechas llegan de gviz como "Date(AAAA,M,D)"; se extrae el año.
+
+export const ANIO_REF = 2026;
+
+function añoDe(v) {
+  if (!v) return null;
+  const s = String(v).trim();
+  const m = s.match(/Date\((\d{4})/);
+  if (m) return Number(m[1]);
+  const n = parseInt(s, 10);
+  return n > 1800 && n < 2100 ? n : null;
+}
+
+export function statsIngreso(personas) {
+  let sumaIngreso = 0, sumaAntig = 0, n = 0, sinDato = 0;
+  const porDecada = {};
+  for (const p of personas) {
+    const nac = añoDe(p['FECHA_NACIMIENTO']);
+    const ent = añoDe(p['AÑO_ENTRADA']);
+    const ei = nac && ent ? ent - nac : null;
+    if (ei !== null && ei >= 10 && ei <= 60) {
+      sumaIngreso += ei;
+      sumaAntig += ANIO_REF - ent;
+      n++;
+      const d = Math.floor(ent / 10) * 10;
+      if (!porDecada[d]) porDecada[d] = { suma: 0, n: 0 };
+      porDecada[d].suma += ei;
+      porDecada[d].n++;
+    } else {
+      sinDato++;
+    }
+  }
+  const decadas = Object.keys(porDecada).map(Number).sort((a, b) => a - b)
+    .map(d => ({ decada: `${d}s`, edadIngreso: porDecada[d].suma / porDecada[d].n, n: porDecada[d].n }));
+  return {
+    edadIngresoMedia: n ? sumaIngreso / n : null,
+    antiguedadMedia: n ? sumaAntig / n : null,
+    decadas,
+    n,
+    sinDato,
+  };
+}
+
 // ── IIA: Índice de Impacto Apostólico ──────────────────────────────────────
 // IIA = beneficiarios de obras activas / jesuitas asignados a obras activas.
 // El campo OBRA ASIGNADA de PERSONAS está vacío en los datos actuales, por lo

@@ -547,6 +547,29 @@ button { font-family: inherit; cursor: pointer; }
   color: var(--gris);
 }
 
+/* Ingreso y antigüedad: dos cifras destacadas + gráfico de tendencia */
+.ingreso-stats {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.ingreso-num {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--azul);
+  font-variant-numeric: tabular-nums;
+}
+
+.ingreso-lbl {
+  font-size: 0.74rem;
+  color: var(--gris);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
 /* Cuerpo "en construcción" dentro de un panel con título (ej. Jesuitas por país) */
 .panel-construccion {
   display: flex;
