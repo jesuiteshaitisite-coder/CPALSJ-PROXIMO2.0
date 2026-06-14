@@ -72,6 +72,11 @@ export const TEXTS = {
     paMiniTipoC: 'Tipo C',
     paTipoTitulo: 'Distribución por tipo (A/B/C)',
     paTipoCategorias: { A: 'Tipo A', B: 'Tipo B', C: 'Tipo C' },
+    paTipoExplica: {
+      A: 'Requiere dirección jesuita directa: un jesuita al frente de la obra. En el modelo de proyección, cada obra Tipo A demanda un jesuita dedicado, con dirección sugerida hasta los 70 años. Las parroquias suelen clasificarse aquí.',
+      B: 'Gestión laical con acompañamiento jesuita: un jesuita garantiza la identidad ignaciana (jesuita garante), sin dirigir el día a día. Un mismo jesuita puede acompañar varias obras Tipo B a la vez (Factor de Alcance Ignaciano). Caso típico: universidades, salvo gobernanza laical ya madura.',
+      C: 'Gestión plenamente laical: la obra opera sin requerir presencia ni dirección jesuita directa. Es el mayor grado de delegación a laicos dentro del cómputo apostólico.',
+    },
     paAmbitoTitulo: 'Distribución por ámbito',
     paProvinciaTitulo: 'Obras por provincia',
     paComposicionTitulo: 'Tipo de obra por provincia',
@@ -185,6 +190,11 @@ export const TEXTS = {
     paMiniTipoC: 'Tipo C',
     paTipoTitulo: 'Distribuição por tipo (A/B/C)',
     paTipoCategorias: { A: 'Tipo A', B: 'Tipo B', C: 'Tipo C' },
+    paTipoExplica: {
+      A: 'Requer direção jesuíta direta: um jesuíta à frente da obra. No modelo de projeção, cada obra Tipo A demanda um jesuíta dedicado, com direção sugerida até os 70 anos. As paróquias costumam classificar-se aqui.',
+      B: 'Gestão laical com acompanhamento jesuíta: um jesuíta garante a identidade inaciana (jesuíta garante), sem dirigir o dia a dia. Um mesmo jesuíta pode acompanhar várias obras Tipo B ao mesmo tempo (Fator de Alcance Inaciano). Caso típico: universidades, salvo governança laical já madura.',
+      C: 'Gestão plenamente laical: a obra opera sem requerer presença nem direção jesuíta direta. É o maior grau de delegação a leigos dentro do cômputo apostólico.',
+    },
     paAmbitoTitulo: 'Distribuição por âmbito',
     paProvinciaTitulo: 'Obras por província',
     paComposicionTitulo: 'Tipo de obra por província',

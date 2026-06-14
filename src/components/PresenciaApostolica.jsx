@@ -176,12 +176,19 @@ export default function PresenciaApostolica({ t, data }) {
                 </div>
                 <ul className="estado-lista">
                   {tipoData.map(d => (
-                    <li key={d.key}>
+                    <li key={d.key} className="tipo-item">
                       <span className="dot" style={{ background: TIPO_COLORS[d.key] }} />
                       <span className="estado-nombre">{d.name}</span>
                       <span className="estado-cifra">
                         <strong>{fmt(d.value)}</strong> · {(d.value / totalComputables * 100).toFixed(1)}%
                       </span>
+                      <div className="tipo-tip">
+                        <div className="tipo-tip-head">
+                          <span className="dot" style={{ background: TIPO_COLORS[d.key] }} />
+                          {d.name}
+                        </div>
+                        <p>{t.paTipoExplica[d.key]}</p>
+                      </div>
                     </li>
                   ))}
                 </ul>
