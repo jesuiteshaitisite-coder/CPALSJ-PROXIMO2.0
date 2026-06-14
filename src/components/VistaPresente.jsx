@@ -7,7 +7,7 @@ import { useAppState } from '../state/AppStateContext.jsx';
 import {
   provinciasDelAlcance, filtrarPersonas,
   statsDemograficas, piramideEdad, comparativaProvincias,
-  distribucionFuerza, FUERZA_ORDEN, statsIngreso,
+  distribucionFuerza, FUERZA_ORDEN, statsIngreso, ANIO_REF,
 } from '../utils/calculations.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -27,6 +27,15 @@ const FUERZA_COLORS = {
   'Acompañamiento': COLORS.acento,
   'Retiro': COLORS.gris,
 };
+
+// Pirámide por zonas vocacionales (formación / activa / mayores)
+const ZONAS = {
+  '<30': 'form', '30-39': 'form',
+  '40-49': 'active', '50-59': 'active', '60-69': 'active',
+  '70-79': 'senior', '80+': 'senior',
+};
+const ZONE_BAR = { form: 'var(--zone-form)', active: 'var(--zone-active)', senior: 'var(--zone-senior)' };
+const ZONE_BG = { form: 'rgba(91,141,184,0.10)', active: 'rgba(27,58,92,0.06)', senior: 'rgba(154,163,176,0.12)' };
 
 function fmt(n, dec = 0) {
   return n === null || n === undefined ? '—'
@@ -85,167 +94,246 @@ export default function VistaPresente({ t, data }) {
     .filter(f => fuerza.conteo[f] > 0)
     .map(f => ({ key: f, name: t.vpFuerzaCategorias[f] || f, value: fuerza.conteo[f] }));
 
+  // Hero panel + narrativa dinámica
+  const pctPlena = fuerza.total ? (fuerza.conteo['Plena'] / fuerza.total) * 100 : 0;
+  const heroSub = alcance === 'cpalsj' ? t.vgHeroSub : provincia;
+
+  // Pirámide: datos por zona y callout dinámico de inversión demográfica
+  const pirTotal = piramide.tramos.reduce((s, x) => s + x.n, 0);
+  const pirMax = Math.max(...piramide.tramos.map(x => x.n), 1);
+  const pirSorted = [...piramide.tramos].reverse(); // 80+ arriba, <30 abajo
+  const nDe = label => piramide.tramos.find(x => x.tramo === label)?.n || 0;
+  const n80 = nDe('80+');
+  const menor40 = nDe('<30') + nDe('30-39');
+  const inversionCritica = n80 > menor40;
+
   return (
     <div className="vista">
 
-      {/* KPIs (se cuentan todas las filas del Sheet, sin filtro REGISTRO_VALIDO) */}
-      <div className="kpi-row">
-        <div className="kpi">
-          <div className="kpi-valor">{fmt(stats.total)}</div>
-          <div className="kpi-label">{t.vpTotalJesuitas}</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-valor">{fmt(stats.edadMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
-          <div className="kpi-label">{t.vpEdadMedia}</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-valor">{fmt(stats.pctMayores70, 1)}%</div>
-          <div className="kpi-label">{t.vpMayores70}</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-valor">{fmt(stats.enEdadActiva)}</div>
-          <div className="kpi-label">{t.vpEnEdadActiva}</div>
-        </div>
-        <div className="kpi kpi-hover">
-          <div className="kpi-valor">{fmt(stats.conVotos)}</div>
-          <div className="kpi-label">{t.vpKpiConVotos}</div>
-          <div className="kpi-tip">
-            <div className="tt-title">{t.vpSinVotosTitulo}</div>
-            <div className="tt-row">
-              <span className="dot" style={{ background: ESTADO_COLORS.P }} />
-              <span className="tt-name">{t.vpEstados.P} (P)</span>
-              <span className="tt-val">{fmt(stats.sinVotosPorEstado.P)}</span>
+      {/* ── Bloque de comando: Hero panel + KPI strip + 4 charts ── */}
+      <div className="vista-general">
+
+        {/* Hero panel (columna izquierda, navy) */}
+        <aside className="hero-panel">
+          <div className="hero-label">{t.vgHeroLabel} · {ANIO_REF}</div>
+          <div className="hero-num">{fmt(stats.total)}</div>
+          <div className="hero-sublabel">{heroSub}</div>
+          <div className="hero-rule" />
+          <p className="hero-narrativa">
+            {t.vgNarrativa(Math.round(stats.pctMayores70), Math.round(pctPlena))}
+          </p>
+          <div className="hero-ministats">
+            <div className="hero-stat">
+              <div className="hero-stat-num">{fmt(stats.edadMedia, 1)}<span className="hero-stat-unit"> {t.vpAnios}</span></div>
+              <div className="hero-stat-lbl">{t.vpEdadMedia}</div>
             </div>
-            <div className="tt-row">
-              <span className="dot" style={{ background: ESTADO_COLORS.F }} />
-              <span className="tt-name">{t.vpEstados.F} (F)</span>
-              <span className="tt-val">{fmt(stats.sinVotosPorEstado.F)}</span>
+            <div className="hero-stat">
+              <div className="hero-stat-num">{fmt(pctPlena, 0)}%</div>
+              <div className="hero-stat-lbl">{t.vgFuerzaPlena}</div>
             </div>
-            <div className="tt-row">
-              <span className="dot" style={{ background: ESTADO_COLORS.O }} />
-              <span className="tt-name">{t.vpEstados.O} (O)</span>
-              <span className="tt-val">{fmt(stats.sinVotosPorEstado.O)}</span>
+            <div className="hero-stat">
+              <div className="hero-stat-num">{fmt(fuerza.conteo['Formación'])}</div>
+              <div className="hero-stat-lbl">{t.vgEnFormacion}</div>
+            </div>
+            <div className="hero-stat">
+              <div className="hero-stat-num">{fmt(n80)}</div>
+              <div className="hero-stat-lbl">{t.vgMayores80}</div>
             </div>
           </div>
-        </div>
-      </div>
+        </aside>
 
-      {/* Pirámide + Estado canónico */}
-      <div className="two-cols">
-        <div className="panel">
-          <h3>{t.vpPiramide}</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={piramide.tramos} layout="vertical" margin={{ left: 8, right: 40 }}>
-              <XAxis type="number" hide />
-              <YAxis type="category" dataKey="tramo" width={50} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={v => [fmt(v), '']} separator="" />
-              <Bar dataKey="n" fill={COLORS.azulMedio} radius={[0, 4, 4, 0]}>
-                <LabelList dataKey="n" position="right" style={{ fontSize: 11, fill: COLORS.gris }} formatter={fmt} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Columna derecha: KPI strip + grid de charts */}
+        <div className="vg-derecha">
 
-        <div className="panel">
-          <h3>{t.vpEstadoCanonico}</h3>
-          <div className="estado-layout">
-            <div className="estado-chart">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={estadoData} dataKey="value" nameKey="name"
-                    cx="50%" cy="50%" innerRadius={58} outerRadius={92}
-                    paddingAngle={2}
-                    label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
-                    labelLine={false}
-                  >
-                    {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
-                  </Pie>
-                  <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / stats.total * 100, 1)}%)`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="estado-centro">
-                <div className="estado-centro-num">{fmt(stats.total)}</div>
-                <div className="estado-centro-label">{t.vpColTotal}</div>
+          {/* KPI strip con semántica de color (sin tendencias inventadas) */}
+          <div className="kpi-strip">
+            <div className="kpi2 is-navy">
+              <div className="kpi2-valor">{fmt(stats.total)}</div>
+              <div className="kpi2-label">{t.vpTotalJesuitas}</div>
+            </div>
+            <div className="kpi2 is-warn">
+              <div className="kpi2-valor">{fmt(stats.edadMedia, 1)}<span className="kpi2-unit"> {t.vpAnios}</span></div>
+              <div className="kpi2-label">{t.vpEdadMedia}</div>
+            </div>
+            <div className="kpi2 is-alert">
+              <div className="kpi2-valor">{fmt(stats.pctMayores70, 1)}%</div>
+              <div className="kpi2-label">{t.vpMayores70}</div>
+            </div>
+            <div className="kpi2 is-navy">
+              <div className="kpi2-valor">{fmt(stats.enEdadActiva)}</div>
+              <div className="kpi2-label">{t.vpEnEdadActiva}</div>
+            </div>
+            <div className="kpi2 is-ok kpi-hover">
+              <div className="kpi2-valor">{fmt(stats.conVotos)}</div>
+              <div className="kpi2-label">{t.vpKpiConVotos}</div>
+              <div className="kpi-tip">
+                <div className="tt-title">{t.vpSinVotosTitulo}</div>
+                <div className="tt-row">
+                  <span className="dot" style={{ background: ESTADO_COLORS.P }} />
+                  <span className="tt-name">{t.vpEstados.P} (P)</span>
+                  <span className="tt-val">{fmt(stats.sinVotosPorEstado.P)}</span>
+                </div>
+                <div className="tt-row">
+                  <span className="dot" style={{ background: ESTADO_COLORS.F }} />
+                  <span className="tt-name">{t.vpEstados.F} (F)</span>
+                  <span className="tt-val">{fmt(stats.sinVotosPorEstado.F)}</span>
+                </div>
+                <div className="tt-row">
+                  <span className="dot" style={{ background: ESTADO_COLORS.O }} />
+                  <span className="tt-name">{t.vpEstados.O} (O)</span>
+                  <span className="tt-val">{fmt(stats.sinVotosPorEstado.O)}</span>
+                </div>
               </div>
             </div>
-            <ul className="estado-lista">
-              {estadoData.map(d => (
-                <li key={d.key}>
-                  <span className="dot" style={{ background: ESTADO_COLORS[d.key] }} />
-                  <span className="estado-nombre">{d.name}</span>
-                  <span className="estado-cifra">
-                    <strong>{fmt(d.value)}</strong> · {fmt(d.value / stats.total * 100, 1)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
           </div>
-        </div>
-      </div>
 
-      {/* Fuerza apostólica + Ingreso y antigüedad (campos bien poblados) */}
-      <div className="two-cols">
-        <div className="panel">
-          <h3>{t.vpFuerzaTitulo}</h3>
-          <div className="estado-layout">
-            <div className="estado-chart">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={fuerzaData} dataKey="value" nameKey="name"
-                    cx="50%" cy="50%" innerRadius={58} outerRadius={92}
-                    paddingAngle={2}
-                    label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
-                    labelLine={false}
-                  >
-                    {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
-                  </Pie>
-                  <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / fuerza.total * 100, 1)}%)`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="estado-centro">
-                <div className="estado-centro-num">{fmt(fuerza.total)}</div>
-                <div className="estado-centro-label">{t.vpColTotal}</div>
+          {/* Grid 2×2 de charts */}
+          <div className="vg-charts">
+
+            {/* Pirámide de edad con zonas vocacionales */}
+            <div className="panel piramide-panel">
+              <h3>{t.vpPiramide}</h3>
+              <p className="panel-sub">{t.vgPiramideSub}</p>
+              <div className="pir-legend">
+                <span><i style={{ background: 'var(--zone-form)' }} />{t.vgZonaFormacion}</span>
+                <span><i style={{ background: 'var(--zone-active)' }} />{t.vgZonaActiva}</span>
+                <span><i style={{ background: 'var(--zone-senior)' }} />{t.vgZonaMayores}</span>
+              </div>
+              <div className="pir-rows">
+                {pirSorted.map(tr => {
+                  const zona = ZONAS[tr.tramo];
+                  const pct = pirTotal ? (tr.n / pirTotal) * 100 : 0;
+                  return (
+                    <div className="pir-row" key={tr.tramo} style={{ background: ZONE_BG[zona] }}
+                         title={`${tr.tramo}: ${fmt(tr.n)} (${fmt(pct, 0)}%)`}>
+                      <span className="pir-label">{tr.tramo}</span>
+                      <div className="pir-track">
+                        <div className="pir-bar" style={{ width: `${(tr.n / pirMax) * 100}%`, background: ZONE_BAR[zona] }} />
+                      </div>
+                      <span className="pir-num">{fmt(tr.n)}</span>
+                      <span className="pir-pct">{fmt(pct, 0)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {inversionCritica && (
+                <div className="pir-callout">
+                  <span className="pir-callout-ico" aria-hidden="true">⚠️</span>
+                  <div>
+                    <div className="pir-callout-tit">{t.vgCalloutTitulo}</div>
+                    <div className="pir-callout-txt">{t.vgCalloutTexto(fmt(n80), fmt(menor40))}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Estado canónico (donut) */}
+            <div className="panel">
+              <h3>{t.vpEstadoCanonico}</h3>
+              <div className="estado-layout">
+                <div className="estado-chart">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={estadoData} dataKey="value" nameKey="name"
+                        cx="50%" cy="50%" innerRadius={58} outerRadius={92}
+                        paddingAngle={2}
+                        label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                        labelLine={false}
+                      >
+                        {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
+                      </Pie>
+                      <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / stats.total * 100, 1)}%)`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="estado-centro">
+                    <div className="estado-centro-num">{fmt(stats.total)}</div>
+                    <div className="estado-centro-label">{t.vpColTotal}</div>
+                  </div>
+                </div>
+                <ul className="estado-lista">
+                  {estadoData.map(d => (
+                    <li key={d.key}>
+                      <span className="dot" style={{ background: ESTADO_COLORS[d.key] }} />
+                      <span className="estado-nombre">{d.name}</span>
+                      <span className="estado-cifra">
+                        <strong>{fmt(d.value)}</strong> · {fmt(d.value / stats.total * 100, 1)}%
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-            <ul className="estado-lista">
-              {fuerzaData.map(d => (
-                <li key={d.key}>
-                  <span className="dot" style={{ background: FUERZA_COLORS[d.key] }} />
-                  <span className="estado-nombre">{d.name}</span>
-                  <span className="estado-cifra">
-                    <strong>{fmt(d.value)}</strong> · {fmt(d.value / fuerza.total * 100, 1)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
 
-        <div className="panel">
-          <h3>{t.vpIngresoTitulo}</h3>
-          <div className="ingreso-stats">
-            <div className="ingreso-stat">
-              <div className="ingreso-num">{fmt(ingreso.edadIngresoMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
-              <div className="ingreso-lbl">{t.vpEdadIngresoMedia}</div>
+            {/* Fuerza apostólica (donut) */}
+            <div className="panel">
+              <h3>{t.vpFuerzaTitulo}</h3>
+              <div className="estado-layout">
+                <div className="estado-chart">
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={fuerzaData} dataKey="value" nameKey="name"
+                        cx="50%" cy="50%" innerRadius={58} outerRadius={92}
+                        paddingAngle={2}
+                        label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                        labelLine={false}
+                      >
+                        {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
+                      </Pie>
+                      <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / fuerza.total * 100, 1)}%)`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="estado-centro">
+                    <div className="estado-centro-num">{fmt(fuerza.total)}</div>
+                    <div className="estado-centro-label">{t.vpColTotal}</div>
+                  </div>
+                </div>
+                <ul className="estado-lista">
+                  {fuerzaData.map(d => {
+                    const pct = fuerza.total ? (d.value / fuerza.total) * 100 : 0;
+                    return (
+                      <li key={d.key} className="fuerza-item">
+                        <div className="fuerza-item-fila">
+                          <span className="dot" style={{ background: FUERZA_COLORS[d.key] }} />
+                          <span className="estado-nombre">{d.name}</span>
+                          <span className="estado-cifra"><strong>{fmt(d.value)}</strong> · {fmt(pct, 1)}%</span>
+                        </div>
+                        <div className="fuerza-barra"><div style={{ width: `${pct}%`, background: FUERZA_COLORS[d.key] }} /></div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
-            <div className="ingreso-stat">
-              <div className="ingreso-num">{fmt(ingreso.antiguedadMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
-              <div className="ingreso-lbl">{t.vpAntiguedadMedia}</div>
+
+            {/* Ingreso y antigüedad */}
+            <div className="panel">
+              <h3>{t.vpIngresoTitulo}</h3>
+              <div className="ingreso-stats">
+                <div className="ingreso-stat">
+                  <div className="ingreso-num">{fmt(ingreso.edadIngresoMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
+                  <div className="ingreso-lbl">{t.vpEdadIngresoMedia}</div>
+                </div>
+                <div className="ingreso-stat">
+                  <div className="ingreso-num">{fmt(ingreso.antiguedadMedia, 1)} <span className="kpi-unidad">{t.vpAnios}</span></div>
+                  <div className="ingreso-lbl">{t.vpAntiguedadMedia}</div>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={170}>
+                <BarChart data={ingreso.decadas} margin={{ left: 0, right: 8, top: 12 }}>
+                  <XAxis dataKey="decada" tick={{ fontSize: 11 }} />
+                  <YAxis hide domain={[0, dataMax => dataMax + 4]} />
+                  <Tooltip formatter={v => [`${fmt(v, 1)} ${t.vpAnios}`, t.vpEdadIngreso]} />
+                  <Bar dataKey="edadIngreso" fill={COLORS.acento} radius={[3, 3, 0, 0]}>
+                    <LabelList dataKey="edadIngreso" position="top" style={{ fontSize: 10, fill: COLORS.gris }} formatter={v => fmt(v, 1)} />
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="panel-nota">{t.vpIngresoSub}</p>
             </div>
+
           </div>
-          <ResponsiveContainer width="100%" height={170}>
-            <BarChart data={ingreso.decadas} margin={{ left: 0, right: 8, top: 12 }}>
-              <XAxis dataKey="decada" tick={{ fontSize: 11 }} />
-              <YAxis hide domain={[0, dataMax => dataMax + 4]} />
-              <Tooltip formatter={v => [`${fmt(v, 1)} ${t.vpAnios}`, t.vpEdadIngreso]} />
-              <Bar dataKey="edadIngreso" fill={COLORS.acento} radius={[3, 3, 0, 0]}>
-                <LabelList dataKey="edadIngreso" position="top" style={{ fontSize: 10, fill: COLORS.gris }} formatter={v => fmt(v, 1)} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="panel-nota">{t.vpIngresoSub}</p>
         </div>
       </div>
 
