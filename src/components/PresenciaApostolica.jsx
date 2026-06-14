@@ -261,17 +261,35 @@ export default function PresenciaApostolica({ t, data }) {
       </div>
 
       {/* Residencias y comunidades: informativo, no computan como obra */}
-      <div className="franja-construccion">
-        <span className="fc-badge" aria-hidden="true">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 11l9-8 9 8" />
-            <path d="M5 10v10h14V10" />
-          </svg>
-        </span>
-        <div className="fc-texto">
-          <span className="fc-titulo">{t.paResidenciasTitulo}</span>
-          <span className="fc-sub">{t.paResidenciasNota(residencias.length)}</span>
+      <div className="panel">
+        <h3>{t.paResidenciasTitulo}</h3>
+        <p className="panel-sub">{t.paResidenciasNota(residencias.length)}</p>
+        <div className="table-wrap table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>{t.paColNombre}</th>
+                <th>{t.vpColProvincia}</th>
+                <th>{t.paColPais}</th>
+                <th>{t.paColLugar}</th>
+                <th className="num">{t.paColPresencia}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {residencias.map((o, i) => (
+                <tr key={i}>
+                  <td>{o['NOMBRE_OBRA'] || '—'}</td>
+                  <td>{provinciaDeObra(o)}</td>
+                  <td>{o['PAIS'] || '—'}</td>
+                  <td>{o['LUGAR'] || '—'}</td>
+                  <td className="num">{o['PRESENCIA ACTUAL DE SJS'] || '—'}</td>
+                </tr>
+              ))}
+              {residencias.length === 0 && (
+                <tr><td colSpan={5} className="tabla-vacia">{t.paTablaVacia}</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
