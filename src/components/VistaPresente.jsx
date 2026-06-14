@@ -42,6 +42,21 @@ function fmt(n, dec = 0) {
     : n.toLocaleString('es-CL', { maximumFractionDigits: dec, minimumFractionDigits: dec });
 }
 
+// Etiqueta de % DENTRO del anillo de la dona (evita números "sueltos" fuera).
+const RADIAN = Math.PI / 180;
+function etiquetaPorcentaje({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
+  if (percent <= 0.04) return null;
+  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + r * Math.cos(-midAngle * RADIAN);
+  const y = cy + r * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#fff" stroke="rgba(0,0,0,0.28)" strokeWidth={3} paintOrder="stroke"
+          fontSize={12} fontWeight={700} textAnchor="middle" dominantBaseline="central">
+      {`${Math.round(percent * 100)}%`}
+    </text>
+  );
+}
+
 // Tarjeta de hover del gráfico de composición: detalla cada estado y la suma
 // total de la provincia (las barras apiladas no muestran el total por sí solas).
 function TooltipComposicion({ active, payload, label, t }) {
@@ -238,7 +253,7 @@ export default function VistaPresente({ t, data }) {
                         data={estadoData} dataKey="value" nameKey="name"
                         cx="50%" cy="50%" innerRadius={58} outerRadius={92}
                         paddingAngle={2}
-                        label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                        label={etiquetaPorcentaje}
                         labelLine={false}
                       >
                         {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
@@ -276,7 +291,7 @@ export default function VistaPresente({ t, data }) {
                         data={fuerzaData} dataKey="value" nameKey="name"
                         cx="50%" cy="50%" innerRadius={58} outerRadius={92}
                         paddingAngle={2}
-                        label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                        label={etiquetaPorcentaje}
                         labelLine={false}
                       >
                         {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
