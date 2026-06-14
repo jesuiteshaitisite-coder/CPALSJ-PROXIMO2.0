@@ -404,7 +404,8 @@ button { font-family: inherit; cursor: pointer; }
 
 @media (max-width: 560px) { .estado-layout { grid-template-columns: 1fr; } }
 
-.estado-chart { position: relative; }
+.estado-chart { position: relative; min-width: 0; }
+.estado-lista { min-width: 0; }
 
 .estado-centro {
   position: absolute;

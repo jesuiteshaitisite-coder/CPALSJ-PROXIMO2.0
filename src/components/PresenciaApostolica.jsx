@@ -145,7 +145,7 @@ export default function PresenciaApostolica({ t, data }) {
                     <PieChart>
                       <Pie
                         data={tipoData} dataKey="value" nameKey="name"
-                        cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={0}
+                        cx="50%" cy="50%" innerRadius="58%" outerRadius="92%" paddingAngle={0}
                       >
                         {tipoData.map(d => <Cell key={d.key} fill={TIPO_COLORS[d.key]} />)}
                       </Pie>
