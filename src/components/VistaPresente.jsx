@@ -315,6 +315,13 @@ export default function VistaPresente({ t, data }) {
                           <span className="estado-cifra"><strong>{fmt(d.value)}</strong> · {fmt(pct, 1)}%</span>
                         </div>
                         <div className="fuerza-barra"><div style={{ width: `${pct}%`, background: FUERZA_COLORS[d.key] }} /></div>
+                        <div className="tipo-tip">
+                          <div className="tipo-tip-head">
+                            <span className="dot" style={{ background: FUERZA_COLORS[d.key] }} />
+                            {d.name}
+                          </div>
+                          <p>{t.vpFuerzaExplica[d.key]}</p>
+                        </div>
                       </li>
                     );
                   })}

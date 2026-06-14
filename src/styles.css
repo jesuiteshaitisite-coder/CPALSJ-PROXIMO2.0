@@ -898,7 +898,8 @@ button { font-family: inherit; cursor: pointer; }
   transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
 }
 
-.tipo-item:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+.tipo-item:hover .tipo-tip,
+.fuerza-item:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
 
 .tipo-tip-head {
   display: flex;
@@ -989,7 +990,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ── Fuerza apostólica: barra de proporción bajo cada categoría ── */
 
-.fuerza-item { display: block; }
+.fuerza-item { display: block; position: relative; cursor: help; }
 .fuerza-item-fila { display: flex; align-items: center; gap: 8px; }
 
 .fuerza-barra {
