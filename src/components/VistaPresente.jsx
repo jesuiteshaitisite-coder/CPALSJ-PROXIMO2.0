@@ -237,7 +237,7 @@ export default function VistaPresente({ t, data }) {
                       <Pie
                         data={estadoData} dataKey="value" nameKey="name"
                         cx="50%" cy="50%" innerRadius={58} outerRadius={92}
-                        paddingAngle={2}
+                        paddingAngle={0}
                       >
                         {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
                       </Pie>
@@ -273,7 +273,7 @@ export default function VistaPresente({ t, data }) {
                       <Pie
                         data={fuerzaData} dataKey="value" nameKey="name"
                         cx="50%" cy="50%" innerRadius={58} outerRadius={92}
-                        paddingAngle={2}
+                        paddingAngle={0}
                       >
                         {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
                       </Pie>
