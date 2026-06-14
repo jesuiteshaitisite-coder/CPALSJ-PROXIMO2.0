@@ -259,7 +259,6 @@ export default function VistaPresente({ t, data }) {
                       >
                         {estadoData.map(d => <Cell key={d.key} fill={ESTADO_COLORS[d.key]} />)}
                       </Pie>
-                      <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / stats.total * 100, 1)}%)`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="estado-centro">
@@ -295,7 +294,6 @@ export default function VistaPresente({ t, data }) {
                       >
                         {fuerzaData.map(d => <Cell key={d.key} fill={FUERZA_COLORS[d.key]} />)}
                       </Pie>
-                      <Tooltip formatter={(v, name) => [`${fmt(v)} (${fmt(v / fuerza.total * 100, 1)}%)`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="estado-centro">

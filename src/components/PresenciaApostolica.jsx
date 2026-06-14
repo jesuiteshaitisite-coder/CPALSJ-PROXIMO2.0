@@ -149,7 +149,6 @@ export default function PresenciaApostolica({ t, data }) {
                       >
                         {tipoData.map(d => <Cell key={d.key} fill={TIPO_COLORS[d.key]} />)}
                       </Pie>
-                      <Tooltip formatter={(v, name) => [`${fmt(v)} (${(v / totalComputables * 100).toFixed(1)}%)`, name]} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="estado-centro">
