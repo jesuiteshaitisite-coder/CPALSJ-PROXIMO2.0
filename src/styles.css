@@ -1105,6 +1105,12 @@ button { font-family: inherit; cursor: pointer; }
   pointer-events: none;
 }
 
+/* Tabla "Impacto de las tasas de reposición": encabezados en varias líneas y la
+   celda larga de la última columna se parte, para que no quede demasiado ancha. */
+.esc-table thead th { white-space: normal; line-height: 1.22; vertical-align: bottom; }
+.esc-table tbody td { white-space: normal; }
+.esc-table th, .esc-table td { padding-left: 9px; padding-right: 9px; }
+
 .sem-badge {
   font-weight: 700;
   font-size: 0.78rem;

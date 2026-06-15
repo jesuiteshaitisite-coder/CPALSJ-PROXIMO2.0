@@ -222,8 +222,8 @@ export default function Proyeccion({ t, data }) {
           <section className="panel">
             <h3>{t.pyNucleoTitulo} — {scopeLabel}</h3>
             <p className="panel-sub">{t.pyNucleoSub}</p>
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={nucleo.filas} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
+            <ResponsiveContainer width="100%" height={272}>
+              <LineChart data={nucleo.filas} margin={{ top: 24, right: 16, bottom: 4, left: -8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" />
                 <XAxis dataKey="año" tick={{ fontSize: 11, fill: COLORS.gris }} />
                 <YAxis tick={{ fontSize: 11, fill: COLORS.gris }} allowDecimals={false} domain={[0, 'auto']} />
@@ -260,7 +260,7 @@ export default function Proyeccion({ t, data }) {
             <h3>{t.pyEscTitulo}</h3>
             <p className="panel-sub">{t.pyEscSub}</p>
             <div className="table-wrap">
-              <table>
+              <table className="esc-table">
                 <thead>
                   <tr>
                     <th>{t.pyEscColEntran}</th>
