@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from 'recharts';
 import { useAppState } from '../state/AppStateContext.jsx';
 import { provinciasDelAlcance } from '../utils/calculations.js';
 import {
-  resolverCfg, proyectarPorProvincia, curvaEscenarios, serieTSsinRep,
-  chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCobertura,
+  resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
+  chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -59,6 +59,9 @@ export default function Proyeccion({ t, data }) {
     const curvaConTS = curva.map(f => ({ ...f, ts: tsMap[f.año] ?? null }));
     const discrepancia = chequearDiscrepancia(curva, tsMap);
 
+    // Núcleo dedicable a B vs umbral mínimo (segundo gráfico). Series 0/+1/+3.
+    const nucleo = curvaNucleoB(data.sheets, provs, cfg, ANIOS_CURVA, [0, 1, 3]);
+
     // Totales del alcance
     const tot = tabla.reduce((a, r) => ({
       personas: a.personas + r.personas,
@@ -69,10 +72,9 @@ export default function Proyeccion({ t, data }) {
       demandaA: a.demandaA + r.demanda.A,
       demandaB: a.demandaB + r.demanda.B,
       demandaC: a.demandaC + r.demanda.C,
-      capBHoy: a.capBHoy + r.capacidadBHoy,
-      capB2050: a.capB2050 + r.capacidadB2050,
+      nucleoBHoy: a.nucleoBHoy + r.nucleoBHoy,
       K: a.K + (r.equilibrioK || 0),
-    }), { personas: 0, activosHoy: 0, activos2050: 0, activos2080: 0, poolA2050: 0, demandaA: 0, demandaB: 0, demandaC: 0, capBHoy: 0, capB2050: 0, K: 0 });
+    }), { personas: 0, activosHoy: 0, activos2050: 0, activos2080: 0, poolA2050: 0, demandaA: 0, demandaB: 0, demandaC: 0, nucleoBHoy: 0, K: 0 });
 
     // Primer déficit A más cercano del alcance
     const deficits = tabla.map(r => r.primerDeficitA).filter(Boolean);
@@ -88,10 +90,10 @@ export default function Proyeccion({ t, data }) {
 
     const esc = tablaEscenarios(data.sheets, provs, cfg, [0, 1, 2, 3], [2050, 2080, 2100]);
 
-    return { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance, esc };
+    return { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance, esc } = calc;
+  const { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -115,7 +117,10 @@ export default function Proyeccion({ t, data }) {
   const heroSub = esCpalsj ? t.pyHeroSub : provincia;
   const scopeLabel = esCpalsj ? 'CPALSJ' : provincia;
   const fraseScope = esCpalsj ? 'la CPALSJ' : provincia;
-  const semBTotal = semaforoCobertura(tot.capBHoy, tot.demandaB);
+  const semCruceTotal = semaforoCruce(nucleo.cruces[0]);
+
+  // Fragmentos de texto: qué pasa con el cruce bajo reposición +1 / +3.
+  const txtCruce = a => (a ? t.pyNucleoCruzaEn(a) : t.pyNucleoNoCruza);
 
   return (
     <div className="vista">
@@ -195,6 +200,43 @@ export default function Proyeccion({ t, data }) {
             <p className="panel-nota">{t.pyEquilibrio(fmt(base2100), Kalcance ?? '—')}</p>
           </section>
 
+          {/* Núcleo dedicable a B vs umbral mínimo (segundo gráfico, aparte) */}
+          <section className="panel">
+            <h3>{t.pyNucleoTitulo} — {scopeLabel}</h3>
+            <p className="panel-sub">{t.pyNucleoSub}</p>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={nucleo.filas} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" />
+                <XAxis dataKey="año" tick={{ fontSize: 11, fill: COLORS.gris }} />
+                <YAxis tick={{ fontSize: 11, fill: COLORS.gris }} allowDecimals={false} domain={[0, 'auto']} />
+                <Tooltip content={<TooltipCurva t={t} />} />
+                <Legend wrapperStyle={{ fontSize: '0.74rem' }} />
+                {/* Umbral mínimo: obras B ÷ capacidad de acompañamiento */}
+                <ReferenceLine
+                  y={nucleo.umbral}
+                  stroke={COLORS.gris}
+                  strokeDasharray="6 4"
+                  strokeWidth={1.6}
+                  label={{ value: t.pyNucleoUmbral(Math.round(nucleo.umbral)), position: 'insideTopRight', fontSize: 11, fill: COLORS.gris }}
+                />
+                {/* Marca del año de cruce (curva sin reposición) */}
+                {nucleo.cruces[0] && (
+                  <ReferenceLine
+                    x={nucleo.filas.reduce((best, f) => (f.año >= nucleo.cruces[0] && (best === null || f.año < best) ? f.año : best), null) ?? nucleo.cruces[0]}
+                    stroke={COLORS.rojoCl}
+                    strokeDasharray="2 3"
+                    label={{ value: t.pyNucleoCruceMarca(nucleo.cruces[0]), position: 'top', fontSize: 11, fill: COLORS.rojoCl }}
+                  />
+                )}
+                <Line type="monotone" dataKey="n0" name={t.pySerieBase} stroke={COLORS.rojoCl}   strokeWidth={2.4} dot={false} />
+                <Line type="monotone" dataKey="n1" name={t.pySerie1}    stroke={COLORS.azulMedio} strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="n3" name={t.pySerie3}    stroke={COLORS.verdeCl}  strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="panel-nota">{t.pyNucleoNotaCruce(nucleo.cruces[0])}</p>
+            <p className="panel-nota">{t.pyNucleoNotaRep(txtCruce(nucleo.cruces[1]), txtCruce(nucleo.cruces[3]))}</p>
+          </section>
+
           {/* Escenarios de ingreso 0–3 */}
           <section className="panel">
             <h3>{t.pyEscTitulo}</h3>
@@ -268,7 +310,7 @@ export default function Proyeccion({ t, data }) {
                     <th className="num">{t.pyColK}</th>
                     <th>{t.pyColEstado}</th>
                     <th className="num">{t.pyColObrasB}</th>
-                    <th className="num">{t.pyColCapacidadB}</th>
+                    <th className="num">{t.pyColNucleoB}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -289,8 +331,8 @@ export default function Proyeccion({ t, data }) {
                       </td>
                       <td className="num">{fmt(r.obrasB)}</td>
                       <td className="num">
-                        {fmt(r.capacidadBHoy)}{' '}
-                        <span className="sem-badge" style={{ color: SEM_COLOR[r.semBHoy] }}>{SEM_SIMB[r.semBHoy]}</span>
+                        {fmt(r.nucleoBHoy)} → {r.anioCruceB ?? '—'}{' '}
+                        <span className="sem-badge" style={{ color: SEM_COLOR[r.semCruceB] }}>{SEM_SIMB[r.semCruceB]}</span>
                       </td>
                     </tr>
                   ))}
@@ -309,15 +351,15 @@ export default function Proyeccion({ t, data }) {
                       <td>—</td>
                       <td className="num">{fmt(tot.demandaB)}</td>
                       <td className="num">
-                        {fmt(tot.capBHoy)}{' '}
-                        <span className="sem-badge" style={{ color: SEM_COLOR[semBTotal] }}>{SEM_SIMB[semBTotal]}</span>
+                        {fmt(tot.nucleoBHoy)} → {nucleo.cruces[0] ?? '—'}{' '}
+                        <span className="sem-badge" style={{ color: SEM_COLOR[semCruceTotal] }}>{SEM_SIMB[semCruceTotal]}</span>
                       </td>
                     </tr>
                   </tfoot>
                 )}
               </table>
             </div>
-            <p className="panel-nota">{t.pyBFrase(fraseScope, tot.demandaB, Math.round(tot.capBHoy), Math.round(tot.capB2050))}</p>
+            <p className="panel-nota">{t.pyBFrase(fraseScope, tot.demandaB, Math.round(tot.nucleoBHoy), nucleo.cruces[0])}</p>
             <p className="panel-nota">{t.pyObrasCNota(tot.demandaC)}</p>
             <p className="panel-nota">{t.pyNotaPie}</p>
           </section>

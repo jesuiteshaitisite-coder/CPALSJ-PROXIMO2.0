@@ -175,6 +175,30 @@ export function semaforoCobertura(capacidad, demanda) {
   return 'rojo';
 }
 
+// Semáforo del año de cruce del núcleo de B contra su umbral mínimo:
+//  · verde  → no cruza en el horizonte o cruza tarde (> 2080)
+//  · amarillo → cruza dentro de una generación larga (2051–2080)
+//  · rojo   → cruza pronto (≤ 2050)
+export function semaforoCruce(añoCruce) {
+  if (añoCruce === null || añoCruce === undefined) return 'verde';
+  if (añoCruce > 2080) return 'verde';
+  if (añoCruce > 2050) return 'amarillo';
+  return 'rojo';
+}
+
+// Año de cruce del núcleo dedicable a B (libres tras cubrir A) bajo su umbral
+// mínimo (obras B ÷ capacidad de acompañamiento). Barrido AÑO A AÑO. tasa = 0
+// es el peor caso «si nadie entra». Devuelve null si nunca cae bajo el umbral.
+export function anioCruceNucleoB(personas, demanda, cfg, tasa = 0) {
+  if (demanda.B <= 0 || cfg.fai <= 0) return null;
+  const umbral = demanda.B / cfg.fai;
+  const cfgK = { ...cfg, ingresosAnuales: tasa };
+  for (let Y = cfg.anioBase; Y <= PROY_FIN; Y++) {
+    if (cruceEn(personas, demanda, Y, cfgK, 1).libresB < umbral) return Y;
+  }
+  return null;
+}
+
 // ── Métricas clave por provincia ─────────────────────────────────────────────
 export function metricasProvincia(personas, obras, cfg) {
   const demanda = demandaDeObras(obras);
@@ -210,6 +234,7 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
     const m = metricasProvincia(personas, obras, cfg);
     const cruce2050 = cruceEn(personas, m.demanda, 2050, cfg, 1);
     const cruceHoy  = cruceEn(personas, m.demanda, cfg.anioBase, cfg, 1);
+    const anioCruceB = anioCruceNucleoB(personas, m.demanda, cfg, 0);
     return {
       provincia: prov,
       personas: personas.length,
@@ -221,12 +246,14 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
       primerDeficitA: m.primerDeficitA,
       equilibrioK: m.equilibrioK,
       semaforo2050: cruce2050.semaforo,
-      // Obras B y capacidad de acompañamiento (reaccionan a cfg.fai)
+      // Obras B y núcleo dedicable a B (reacciona a cfg.fai vía el umbral/cruce)
       obrasB: m.demanda.B,
       obrasC: m.demanda.C,
-      capacidadBHoy: cruceHoy.capacidadB,
-      capacidadB2050: cruce2050.capacidadB,
-      semBHoy: semaforoCobertura(cruceHoy.capacidadB, m.demanda.B),
+      // Núcleo honesto: jesuitas libres hoy para B, umbral mínimo y año de cruce.
+      nucleoBHoy: cruceHoy.libresB,
+      umbralB: cfg.fai > 0 ? m.demanda.B / cfg.fai : 0,
+      anioCruceB,
+      semCruceB: semaforoCruce(anioCruceB),
     };
   });
 }
@@ -246,6 +273,48 @@ export function curvaEscenarios(sheets, provincias, cfg, años, tasas) {
     }
     return fila;
   });
+}
+
+// ── Curva del núcleo dedicable a B vs umbral mínimo (segundo gráfico) ─────────
+// Por cada año y cada tasa de ingreso, suma PROVINCIA A PROVINCIA los jesuitas
+// libres para B (activos − los que dirigen A). El cruce A→B es un tope por
+// provincia, por eso se agrega así y no sobre el total. Devuelve además el
+// umbral mínimo (obras B ÷ capacidad de acompañamiento) y el año de cruce de
+// cada tasa (barrido anual; el de tasa 0 es el dato accionable «si nadie entra»).
+export function curvaNucleoB(sheets, provincias, cfg, años, tasas) {
+  const datos = provincias.map(prov => ({
+    personas: personasDeProvincia(sheets, prov),
+    demanda:  demandaDeObras(obrasDeProvincia(sheets, prov)),
+  }));
+  const demandaBTotal = datos.reduce((s, d) => s + d.demanda.B, 0);
+  const umbral = cfg.fai > 0 ? demandaBTotal / cfg.fai : 0;
+
+  const nucleoEn = (Y, tasa) => {
+    const cfgK = { ...cfg, ingresosAnuales: tasa };
+    let libres = 0;
+    for (const d of datos) libres += cruceEn(d.personas, d.demanda, Y, cfgK, 1).libresB;
+    return libres;
+  };
+
+  const filas = años.map(Y => {
+    const fila = { año: Y, umbral };
+    for (const k of tasas) fila['n' + k] = nucleoEn(Y, k);
+    return fila;
+  });
+
+  // Año de cruce por tasa: primer año (barrido anual) con núcleo < umbral.
+  const cruces = {};
+  for (const k of tasas) {
+    let añoCruce = null;
+    if (demandaBTotal > 0 && umbral > 0) {
+      for (let Y = cfg.anioBase; Y <= PROY_FIN; Y++) {
+        if (nucleoEn(Y, k) < umbral) { añoCruce = Y; break; }
+      }
+    }
+    cruces[k] = añoCruce;
+  }
+
+  return { filas, umbral, demandaBTotal, cruces };
 }
 
 // ── Tabla de escenarios de ingreso (0..N al año) para el alcance ─────────────

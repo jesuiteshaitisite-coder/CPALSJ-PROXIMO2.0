@@ -154,6 +154,16 @@ export const TEXTS = {
     pySerie3: 'Con 3 ingresos/año por provincia',
     pySerieTS: 'Hoja del equipo (control)',
     pyEquilibrio: (z, k) => `Con la perseverancia actual, sin vocaciones nuevas en 2100 quedarían ${z} jesuitas activos. Para sostener el nivel de hoy harían falta al menos ${k} ingresos al año.`,
+    pyNucleoTitulo: 'Núcleo de jesuitas para las obras B',
+    pyNucleoSub: 'Cuántos jesuitas quedan libres para acompañar las obras Tipo B (los activos menos los que ya dirigen una obra A), frente al mínimo necesario para poner un referente en cada obra B. La línea baja con los años; el dato clave es el año en que cruza ese mínimo.',
+    pyNucleoUmbral: (n) => `Mínimo necesario: ${n}`,
+    pyNucleoCruceMarca: (a) => `Cruza en ${a}`,
+    pyNucleoCruzaEn: (a) => `cruza en ${a}`,
+    pyNucleoNoCruza: 'el núcleo no cruza el mínimo en todo el horizonte',
+    pyNucleoNotaCruce: (a) => a
+      ? `Sin nuevas vocaciones, el núcleo cae por debajo del mínimo necesario en ${a}: desde ese año no hay jesuitas suficientes para acompañar todas las obras Tipo B.`
+      : 'Sin nuevas vocaciones, el núcleo se mantiene por encima del mínimo en todo el horizonte hasta 2100.',
+    pyNucleoNotaRep: (t1, t3) => `Con vocaciones el resultado cambia: con 1 ingreso/año, ${t1}; con 3 ingresos/año, ${t3}.`,
     pyDiscrepancia: (dif, año) => `Aviso de calidad de datos: la curva calculada se aparta hasta ${dif} jesuitas de la hoja TS_SIN_REP (desde ${año}). La fuente válida es el cálculo desde PERSONAS; conviene actualizar TS_SIN_REP.`,
     pyEscTitulo: '¿Qué pasaría si entran vocaciones cada año?',
     pyEscSub: 'Cuántos jesuitas activos habría según cuántos jóvenes entren al año (ya descontada la perseverancia). En verde, el mínimo que mantiene el nivel de hoy.',
@@ -177,19 +187,15 @@ export const TEXTS = {
     pyColK: 'Ingresos/año para sostener',
     pyColEstado: 'Situación en 2050',
     pyColObrasB: 'Obras B (acompañadas)',
-    pyColCapacidadB: 'Capacidad de acompañamiento',
+    pyColNucleoB: 'Jesuitas para B (hoy → año de cruce)',
     pyFaiControl: 'Capacidad de acompañamiento',
     pyFaiUnidad: (n) => `${n} ${n === 1 ? 'obra' : 'obras'} B por jesuita`,
     pyObrasCNota: (n) => `Obras C (gestión plenamente laical): ${n} — no requieren jesuita, por eso no se proyectan.`,
-    pyBFrase: (scope, n, capHoy, cap2050) => {
+    pyBFrase: (scope, n, nucleo, año) => {
       if (n === 0) return `${scope} no tiene obras Tipo B que acompañar.`;
-      const hoyTxt = capHoy >= n
-        ? `Hoy ${scope} puede acompañar holgadamente sus ${n} obras Tipo B (capacidad para unas ${capHoy})`
-        : `Hoy ${scope} queda al límite para acompañar sus ${n} obras Tipo B (capacidad para unas ${capHoy})`;
-      const futTxt = cap2050 >= n
-        ? `hacia 2050 la capacidad baja a unas ${cap2050}, pero todavía alcanza para las ${n}.`
-        : `hacia 2050 la capacidad baja a unas ${cap2050} y ya no alcanzaría para todas.`;
-      return `${hoyTxt}; ${futTxt}`;
+      return año
+        ? `Hoy ${scope} tiene ${nucleo} jesuitas dedicables para acompañar sus ${n} obras Tipo B. Sin nuevas vocaciones, el núcleo bajaría del mínimo necesario en ${año}.`
+        : `Hoy ${scope} tiene ${nucleo} jesuitas dedicables para acompañar sus ${n} obras Tipo B, y el núcleo se mantiene sobre el mínimo en todo el horizonte.`;
     },
     pyTotalCpalsj: 'TOTAL CPALSJ',
     pyNunca: 'No faltan',
@@ -353,6 +359,16 @@ export const TEXTS = {
     pySerie3: 'Com 3 ingressos/ano por província',
     pySerieTS: 'Planilha da equipe (controle)',
     pyEquilibrio: (z, k) => `Com a perseverança atual, sem novas vocações em 2100 restariam ${z} jesuítas ativos. Para sustentar o nível de hoje seriam necessários ao menos ${k} ingressos por ano.`,
+    pyNucleoTitulo: 'Núcleo de jesuítas para as obras B',
+    pyNucleoSub: 'Quantos jesuítas ficam livres para acompanhar as obras Tipo B (os ativos menos os que já dirigem uma obra A), frente ao mínimo necessário para pôr um referente em cada obra B. A linha desce com os anos; o dado-chave é o ano em que cruza esse mínimo.',
+    pyNucleoUmbral: (n) => `Mínimo necessário: ${n}`,
+    pyNucleoCruceMarca: (a) => `Cruza em ${a}`,
+    pyNucleoCruzaEn: (a) => `cruza em ${a}`,
+    pyNucleoNoCruza: 'o núcleo não cruza o mínimo em todo o horizonte',
+    pyNucleoNotaCruce: (a) => a
+      ? `Sem novas vocações, o núcleo cai abaixo do mínimo necessário em ${a}: a partir desse ano não há jesuítas suficientes para acompanhar todas as obras Tipo B.`
+      : 'Sem novas vocações, o núcleo mantém-se acima do mínimo em todo o horizonte até 2100.',
+    pyNucleoNotaRep: (t1, t3) => `Com vocações o resultado muda: com 1 ingresso/ano, ${t1}; com 3 ingressos/ano, ${t3}.`,
     pyDiscrepancia: (dif, año) => `Aviso de qualidade de dados: a curva calculada se afasta até ${dif} jesuítas da planilha TS_SIN_REP (desde ${año}). A fonte válida é o cálculo a partir de PERSONAS; convém atualizar TS_SIN_REP.`,
     pyEscTitulo: 'O que aconteceria se entrarem vocações a cada ano?',
     pyEscSub: 'Quantos jesuítas ativos haveria conforme quantos jovens entrem por ano (já descontada a perseverança). Em verde, o mínimo que mantém o nível de hoje.',
@@ -376,19 +392,15 @@ export const TEXTS = {
     pyColK: 'Ingressos/ano para sustentar',
     pyColEstado: 'Situação em 2050',
     pyColObrasB: 'Obras B (acompanhadas)',
-    pyColCapacidadB: 'Capacidade de acompanhamento',
+    pyColNucleoB: 'Jesuítas para B (hoje → ano de cruzamento)',
     pyFaiControl: 'Capacidade de acompanhamento',
     pyFaiUnidad: (n) => `${n} ${n === 1 ? 'obra' : 'obras'} B por jesuíta`,
     pyObrasCNota: (n) => `Obras C (gestão plenamente laical): ${n} — não requerem jesuíta, por isso não se projetam.`,
-    pyBFrase: (scope, n, capHoy, cap2050) => {
+    pyBFrase: (scope, n, nucleo, año) => {
       if (n === 0) return `${scope} não tem obras Tipo B para acompanhar.`;
-      const hoyTxt = capHoy >= n
-        ? `Hoje ${scope} pode acompanhar com folga suas ${n} obras Tipo B (capacidade para cerca de ${capHoy})`
-        : `Hoje ${scope} fica no limite para acompanhar suas ${n} obras Tipo B (capacidade para cerca de ${capHoy})`;
-      const futTxt = cap2050 >= n
-        ? `até 2050 a capacidade baixa para cerca de ${cap2050}, mas ainda alcança para as ${n}.`
-        : `até 2050 a capacidade baixa para cerca de ${cap2050} e já não alcançaria para todas.`;
-      return `${hoyTxt}; ${futTxt}`;
+      return año
+        ? `Hoje ${scope} tem ${nucleo} jesuítas dedicáveis para acompanhar suas ${n} obras Tipo B. Sem novas vocações, o núcleo cairia abaixo do mínimo necessário em ${año}.`
+        : `Hoje ${scope} tem ${nucleo} jesuítas dedicáveis para acompanhar suas ${n} obras Tipo B, e o núcleo mantém-se acima do mínimo em todo o horizonte.`;
     },
     pyTotalCpalsj: 'TOTAL CPALSJ',
     pyNunca: 'Não faltam',
