@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
@@ -24,19 +24,6 @@ const GLOSARIO = [
   'fai', 'demanda', 'huerfanas', 'equilibrio', 'semaforo', 'deficit',
 ];
 
-function ChipGlosario({ term }) {
-  return (
-    <span className="tipo-item glos-chip">
-      {term.t}
-      <span className="glos-q">?</span>
-      <div className="tipo-tip">
-        <div className="tipo-tip-head">{term.t}</div>
-        <p>{term.d}</p>
-      </div>
-    </span>
-  );
-}
-
 function TooltipCurva({ active, payload, label, t }) {
   if (!active || !payload || !payload.length) return null;
   return (
@@ -56,6 +43,7 @@ function TooltipCurva({ active, payload, label, t }) {
 export default function Proyeccion({ t, data }) {
   const appState = useAppState();
   const { alcance, provincia, haitiActivo, escenario } = appState;
+  const [gloss, setGloss] = useState('activa');
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -162,7 +150,22 @@ export default function Proyeccion({ t, data }) {
             <h3>{t.pyGlosarioTitulo}</h3>
             <p className="panel-sub">{t.pyGlosarioSub}</p>
             <div className="glos-grid">
-              {GLOSARIO.map(k => <ChipGlosario key={k} term={t.pyGloss[k]} />)}
+              {GLOSARIO.map(k => (
+                <button
+                  key={k}
+                  type="button"
+                  className={'glos-chip' + (gloss === k ? ' is-active' : '')}
+                  onMouseEnter={() => setGloss(k)}
+                  onFocus={() => setGloss(k)}
+                  onClick={() => setGloss(k)}
+                >
+                  {t.pyGloss[k].t}<span className="glos-q">?</span>
+                </button>
+              ))}
+            </div>
+            <div className="glos-def">
+              <div className="glos-def-head">{t.pyGloss[gloss].t}</div>
+              <p>{t.pyGloss[gloss].d}</p>
             </div>
           </section>
 

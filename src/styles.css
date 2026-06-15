@@ -1022,6 +1022,7 @@ button { font-family: inherit; cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-family: inherit;
   font-size: 0.76rem;
   font-weight: 600;
   color: var(--azul);
@@ -1029,7 +1030,16 @@ button { font-family: inherit; cursor: pointer; }
   border: 1px solid var(--borde);
   border-radius: 999px;
   padding: 5px 11px;
-  cursor: help;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.glos-chip:hover { border-color: var(--azul-medio); }
+
+.glos-chip.is-active {
+  background: var(--azul);
+  color: white;
+  border-color: var(--azul);
 }
 
 .glos-chip .glos-q {
@@ -1045,9 +1055,27 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 700;
 }
 
-/* La tarjeta pop se abre a la izquierda para no salirse por la derecha */
-.glos-chip .tipo-tip { right: auto; left: 0; width: 280px; }
-.glos-chip:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+.glos-chip.is-active .glos-q { background: white; color: var(--azul); }
+
+/* Recuadro de definición fijo bajo los chips (nunca se sale de pantalla) */
+.glos-def {
+  margin-top: 12px;
+  background: #F8FAFC;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--acento);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-height: 88px;
+}
+
+.glos-def-head {
+  font-weight: 700;
+  color: var(--azul);
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.glos-def p { font-size: 0.84rem; color: var(--texto); line-height: 1.55; }
 
 .sem-badge {
   font-weight: 700;
