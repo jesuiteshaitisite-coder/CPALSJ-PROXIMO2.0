@@ -46,7 +46,18 @@ export default function Proyeccion({ t, data }) {
   const appState = useAppState();
   const { alcance, provincia, haitiActivo, escenario, setEscenario } = appState;
   const [gloss, setGloss] = useState('activa');
+  const [tip, setTip] = useState(null); // pop de ayuda de las columnas de Cobertura
   const fai = escenario.fai;
+
+  // Pop flotante (posición fija → no lo recorta el scroll de la tabla). Se centra
+  // bajo el encabezado y se acota a la pantalla para no salirse por los bordes.
+  const mostrarTip = (e, text) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = Math.min(Math.max(r.left + r.width / 2, 150), window.innerWidth - 150);
+    setTip({ text, x, y: r.bottom + 6 });
+  };
+  const ocultarTip = () => setTip(null);
+  const thTip = i => ({ onMouseEnter: e => mostrarTip(e, t.pyCobCards[i].d), onMouseLeave: ocultarTip });
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -286,17 +297,7 @@ export default function Proyeccion({ t, data }) {
           {/* Tabla de cobertura por provincia */}
           <section className="panel">
             <h3>{t.pyTablaTitulo}</h3>
-            <p className="panel-sub">{t.pyTablaSub}</p>
-
-            {/* Tarjetas: qué significa cada columna */}
-            <div className="cob-cards">
-              {t.pyCobCards.map(c => (
-                <div className="cob-card" key={c.t}>
-                  <div className="cob-card-h">{c.t}</div>
-                  <div className="cob-card-d">{c.d}</div>
-                </div>
-              ))}
-            </div>
+            <p className="panel-sub">{t.pyTablaSub} {t.pyCobAyuda}</p>
 
             <div className="fai-control">
               <label htmlFor="faiRange">
@@ -314,20 +315,20 @@ export default function Proyeccion({ t, data }) {
             </div>
 
             <div className="table-wrap">
-              <table>
+              <table className="cob-table">
                 <thead>
                   <tr>
-                    <th>{t.pyColProvincia}</th>
-                    <th className="num">{t.pyColActivosHoy}</th>
-                    <th className="num">{t.pyCol2050}</th>
-                    <th className="num">{t.pyCol2080}</th>
-                    <th className="num">{t.pyColDemandaA}</th>
-                    <th className="num">{t.pyColPoolA2050}</th>
-                    <th className="num">{t.pyColDeficit}</th>
-                    <th className="num">{t.pyColK}</th>
-                    <th>{t.pyColEstado}</th>
-                    <th className="num">{t.pyColObrasB}</th>
-                    <th className="num">{t.pyColNucleoB}</th>
+                    <th {...thTip(0)}>{t.pyColProvincia}</th>
+                    <th className="num" {...thTip(1)}>{t.pyColActivosHoy}</th>
+                    <th className="num" {...thTip(2)}>{t.pyCol2050}</th>
+                    <th className="num" {...thTip(3)}>{t.pyCol2080}</th>
+                    <th className="num" {...thTip(4)}>{t.pyColDemandaA}</th>
+                    <th className="num" {...thTip(5)}>{t.pyColPoolA2050}</th>
+                    <th className="num" {...thTip(6)}>{t.pyColDeficit}</th>
+                    <th className="num" {...thTip(7)}>{t.pyColK}</th>
+                    <th {...thTip(8)}>{t.pyColEstado}</th>
+                    <th className="num" {...thTip(9)}>{t.pyColObrasB}</th>
+                    <th className="num" {...thTip(10)}>{t.pyColNucleoB}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -383,6 +384,10 @@ export default function Proyeccion({ t, data }) {
 
         </div>
       </div>
+
+      {tip && (
+        <div className="cob-tip" style={{ left: tip.x, top: tip.y }} role="tooltip">{tip.text}</div>
+      )}
     </div>
   );
 }

@@ -177,6 +177,7 @@ export const TEXTS = {
     pyEscNotaK: (k) => `Para mantener el nivel de hoy harían falta unos ${k} ingresos al año, más de los que muestra esta tabla.`,
     pyTablaTitulo: 'Cobertura por provincia',
     pyTablaSub: 'Cuántos jesuitas activos hay hoy y cuántos quedarían a futuro si nadie nuevo entra, frente a las obras que requieren un jesuita al frente.',
+    pyCobAyuda: 'Pasa el cursor sobre cualquier columna para ver qué significa.',
     pyCobCards: [
       { t: 'Provincia', d: 'La provincia o región jesuita a la que pertenecen los jesuitas y las obras de esa fila.' },
       { t: 'Jesuitas activos hoy', d: 'Jesuitas en edad de servicio (30 a 84 años) en plena capacidad o acompañando obras, en 2026. Es el punto de partida.' },
@@ -395,6 +396,7 @@ export const TEXTS = {
     pyEscNotaK: (k) => `Para manter o nível de hoje seriam necessários cerca de ${k} ingressos por ano, mais do que mostra esta tabela.`,
     pyTablaTitulo: 'Cobertura por província',
     pyTablaSub: 'Quantos jesuítas ativos há hoje e quantos restariam no futuro se ninguém novo entrar, frente às obras que exigem um jesuíta à frente.',
+    pyCobAyuda: 'Passe o cursor sobre qualquer coluna para ver o que significa.',
     pyCobCards: [
       { t: 'Província', d: 'A província ou região jesuíta à qual pertencem os jesuítas e as obras dessa linha.' },
       { t: 'Jesuítas ativos hoje', d: 'Jesuítas em idade de serviço (30 a 84 anos) em plena capacidade ou acompanhando obras, em 2026. É o ponto de partida.' },
