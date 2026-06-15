@@ -1077,6 +1077,35 @@ button { font-family: inherit; cursor: pointer; }
 
 .glos-def p { font-size: 0.84rem; color: var(--texto); line-height: 1.55; }
 
+/* Tarjetas que explican cada columna de la tabla de Cobertura */
+.cob-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 4px 0 16px;
+}
+
+.cob-card {
+  background: #F8FAFC;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--azul-medio);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.cob-card-h {
+  font-weight: 700;
+  color: var(--azul);
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.cob-card-d {
+  font-size: 0.78rem;
+  color: var(--texto);
+  line-height: 1.5;
+}
+
 .sem-badge {
   font-weight: 700;
   font-size: 0.78rem;

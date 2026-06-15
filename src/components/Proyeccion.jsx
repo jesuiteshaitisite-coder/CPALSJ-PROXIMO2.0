@@ -283,10 +283,20 @@ export default function Proyeccion({ t, data }) {
             )}
           </section>
 
-          {/* Tabla de validación por provincia */}
+          {/* Tabla de cobertura por provincia */}
           <section className="panel">
             <h3>{t.pyTablaTitulo}</h3>
             <p className="panel-sub">{t.pyTablaSub}</p>
+
+            {/* Tarjetas: qué significa cada columna */}
+            <div className="cob-cards">
+              {t.pyCobCards.map(c => (
+                <div className="cob-card" key={c.t}>
+                  <div className="cob-card-h">{c.t}</div>
+                  <div className="cob-card-d">{c.d}</div>
+                </div>
+              ))}
+            </div>
 
             <div className="fai-control">
               <label htmlFor="faiRange">
