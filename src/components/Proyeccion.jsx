@@ -7,6 +7,7 @@ import { provinciasDelAlcance } from '../utils/calculations.js';
 import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
+  sumaPersev, perseveranciaPonderadaDe10,
   ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -80,20 +81,24 @@ export default function Proyeccion({ t, data }) {
     const deficits = tabla.map(r => r.primerDeficitA).filter(Boolean);
     const primerDeficit = deficits.length ? Math.min(...deficits) : null;
 
-    // Número de equilibrio del alcance (recalculado sobre el agregado, no suma de Ks)
+    // Número de equilibrio del alcance (recalculado sobre el agregado, no suma
+    // de Ks). La sensibilidad por ingreso/año es cohortes × Σ perseverancia_prov.
     const base2100 = curva[curva.length - 1].base;
     const ca = cohortesActivas(PROY_FIN, cfg);
-    const nProv = provs.length;
-    const Kalcance = ca > 0
-      ? Math.max(0, Math.ceil((tot.activosHoy - base2100) / (cfg.perseverancia * ca * nProv)))
+    const sp = sumaPersev(provs, cfg);
+    const Kalcance = ca > 0 && sp > 0
+      ? Math.max(0, Math.ceil((tot.activosHoy - base2100) / (ca * sp)))
       : null;
 
     const esc = tablaEscenarios(data.sheets, provs, cfg, [0, 1, 2, 3], [2050, 2080, 2100]);
 
-    return { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc };
+    // Perseverancia ponderada del alcance (CPALSJ = media ponderada por escolares).
+    const persevPond = perseveranciaPonderadaDe10(data.sheets, provs, cfg);
+
+    return { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc } = calc;
+  const { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -110,8 +115,10 @@ export default function Proyeccion({ t, data }) {
     );
     console.table(detalle);
     console.info('La fuente válida es el cálculo desde PERSONAS. TS_SIN_REP es control de calidad; conviene actualizarla si la diferencia crece.');
+    console.info(`Perseverancia ponderada del alcance: ${persevPond.toFixed(2)} de 10.`);
+    console.table(tabla.map(r => ({ provincia: r.provincia, escolares: r.escolares, persevDe10: r.persevDe10 })));
     console.groupEnd();
-  }, [curvaConTS, discrepancia, alcance, provincia]);
+  }, [curvaConTS, discrepancia, alcance, provincia, persevPond, tabla]);
 
   const esCpalsj = alcance === 'cpalsj';
   const heroSub = esCpalsj ? t.pyHeroSub : provincia;

@@ -48,17 +48,82 @@ const DEDICABLES = new Set(['P', 'S', 'F', 'O']); // novicios (NS) excluidos
 
 export function resolverCfg(params, escenario) {
   const pp = params || {};
-  const persevDe10 = escenario?.perseveranciaDe10 ?? pp.PERSEVERANCIA_DE_CADA_10 ?? 6;
+  const persevGlobalDe10 = pp.PERSEVERANCIA_DE_CADA_10 ?? 6;
+
+  // Perseverancia POR PROVINCIA: la fija cada Provincial en PARAMETROS con una
+  // clave «PERSEVERANCIA_<PROVINCIA>» (p.ej. PERSEVERANCIA_CHILE = 7). Mientras
+  // una provincia no tenga su dato, cae al global (fallback 6). El sistema
+  // funciona desde hoy con datos incompletos y se afina al completarse.
+  const persevPorProv = {};
+  for (const k of Object.keys(pp)) {
+    if (k === 'PERSEVERANCIA_DE_CADA_10') continue;
+    const m = /^PERSEVERANCIA_(.+)$/.exec(k);
+    if (!m || pp[k] == null) continue;
+    persevPorProv[normProv(m[1])] = pp[k];
+  }
+
+  // Override puntual del slider (Fase 5): { provincia, de10 } | null. Cuando el
+  // alcance es una sola provincia, el slider mueve la perseverancia de ESA prov.
+  const persevOverride = escenario?.persevOverride ?? null;
+
   return {
     salida:          pp.EDAD_SALIDA ?? 85,
     finDireccionA:   pp.EDAD_FIN_DIRECCION_A ?? 70,
     aniosFormacion:  pp['AÑOS_FORMACION'] ?? pp.ANIOS_FORMACION ?? 10,
     anioBase:        pp.ANIO_BASE ?? 2026,
-    perseveranciaDe10: persevDe10,
-    perseverancia:   persevDe10 / 10,
+    persevGlobalDe10,
+    persevPorProv,
+    persevOverride,
+    // Compat: perseverancia «global» (último fallback; se usa solo cuando una
+    // función opera sin contexto de provincia). El cálculo real es por provincia.
+    perseveranciaDe10: persevGlobalDe10,
+    perseverancia:   persevGlobalDe10 / 10,
     fai:             escenario?.fai ?? pp.FAI ?? 2,
     ingresosAnuales: escenario?.ingresosAnuales ?? 0,
   };
+}
+
+// Perseverancia (de 10) que aplica a una provincia: override del slider →
+// dato de PARAMETROS de la provincia → fallback global.
+export function persevDe10DeProvincia(cfg, prov) {
+  const pv = normProv(prov);
+  if (cfg.persevOverride && normProv(cfg.persevOverride.provincia) === pv) {
+    return cfg.persevOverride.de10;
+  }
+  const v = cfg.persevPorProv?.[pv];
+  return v != null ? v : cfg.persevGlobalDe10;
+}
+
+// Clona cfg fijando la perseverancia de una provincia, para reutilizar las
+// funciones por-persona (que leen cfg.perseverancia) con el valor correcto.
+export function cfgDeProvincia(cfg, prov) {
+  const de10 = persevDe10DeProvincia(cfg, prov);
+  return { ...cfg, perseveranciaDe10: de10, perseverancia: de10 / 10 };
+}
+
+// Suma de factores de perseverancia (de10/10) de un conjunto de provincias.
+// Es la sensibilidad de la reposición agregada por cada ingreso/año (porque
+// cohortes_activas(Y) es igual para todas las provincias).
+export function sumaPersev(provincias, cfg) {
+  return provincias.reduce((s, prov) => s + persevDe10DeProvincia(cfg, prov) / 10, 0);
+}
+
+// Perseverancia ponderada del alcance (para mostrar/usar un único número en
+// CPALSJ): media de la perseverancia de cada provincia ponderada por su nº de
+// escolares en formación (los ingresos reales a los que se aplica). Si no hay
+// escolares, cae a media simple; si no hay provincias, al global.
+export function perseveranciaPonderadaDe10(sheets, provincias, cfg) {
+  if (!provincias.length) return cfg.persevGlobalDe10;
+  let num = 0, den = 0, sumaSimple = 0;
+  for (const prov of provincias) {
+    const de10 = persevDe10DeProvincia(cfg, prov);
+    const escolares = personasDeProvincia(sheets, prov)
+      .filter(p => fuerzaDe(p) === 'Formación').length;
+    num += de10 * escolares;
+    den += escolares;
+    sumaSimple += de10;
+  }
+  return den > 0 ? num / den : sumaSimple / provincias.length;
 }
 
 // ── Aporte de una persona a la fuerza activa / al pool A en un año ───────────
@@ -229,19 +294,22 @@ export function obrasDeProvincia(sheets, prov) {
 // ── Proyección por provincia → matriz para la tabla de validación ────────────
 export function proyectarPorProvincia(sheets, provincias, cfg) {
   return provincias.map(prov => {
+    const cfgP     = cfgDeProvincia(cfg, prov);
     const personas = personasDeProvincia(sheets, prov);
     const obras    = obrasDeProvincia(sheets, prov);
-    const m = metricasProvincia(personas, obras, cfg);
-    const cruce2050 = cruceEn(personas, m.demanda, 2050, cfg, 1);
-    const cruceHoy  = cruceEn(personas, m.demanda, cfg.anioBase, cfg, 1);
-    const anioCruceB = anioCruceNucleoB(personas, m.demanda, cfg, 0);
+    const m = metricasProvincia(personas, obras, cfgP);
+    const cruce2050 = cruceEn(personas, m.demanda, 2050, cfgP, 1);
+    const cruceHoy  = cruceEn(personas, m.demanda, cfgP.anioBase, cfgP, 1);
+    const anioCruceB = anioCruceNucleoB(personas, m.demanda, cfgP, 0);
     return {
       provincia: prov,
       personas: personas.length,
+      escolares: personas.filter(p => fuerzaDe(p) === 'Formación').length,
+      persevDe10: cfgP.perseveranciaDe10,
       activosHoy: m.hoy,
-      activos2050: fuerzaActivaEn(personas, 2050, cfg),
-      activos2080: fuerzaActivaEn(personas, 2080, cfg),
-      poolA2050: poolABaseEn(personas, 2050, cfg),
+      activos2050: fuerzaActivaEn(personas, 2050, cfgP),
+      activos2080: fuerzaActivaEn(personas, 2080, cfgP),
+      poolA2050: poolABaseEn(personas, 2050, cfgP),
       demanda: m.demanda,
       primerDeficitA: m.primerDeficitA,
       equilibrioK: m.equilibrioK,
@@ -262,15 +330,18 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
 // tasas = lista de ingresos/año a graficar (p.ej. [0,1,3]). En CPALSJ la tasa
 // es POR provincia, así que la reposición se multiplica por nº de provincias.
 export function curvaEscenarios(sheets, provincias, cfg, años, tasas) {
-  const porProv = provincias.map(prov => personasDeProvincia(sheets, prov));
-  const nProv = provincias.length;
+  const datos = provincias.map(prov => ({
+    cfgP: cfgDeProvincia(cfg, prov),
+    personas: personasDeProvincia(sheets, prov),
+  }));
+  // Cada provincia activa sus escolares y repone ingresos con SU perseverancia.
+  const suma = datos.reduce((s, d) => s + d.cfgP.perseverancia, 0);
   return años.map(Y => {
     let base = 0;
-    for (const personas of porProv) base += fuerzaActivaEn(personas, Y, cfg);
+    for (const d of datos) base += fuerzaActivaEn(d.personas, Y, d.cfgP);
+    const coh = cohortesActivas(Y, cfg);
     const fila = { año: Y, base };
-    for (const k of tasas) {
-      fila['r' + k] = base + k * cfg.perseverancia * cohortesActivas(Y, cfg) * nProv;
-    }
+    for (const k of tasas) fila['r' + k] = base + k * coh * suma;
     return fila;
   });
 }
@@ -283,6 +354,7 @@ export function curvaEscenarios(sheets, provincias, cfg, años, tasas) {
 // cada tasa (barrido anual; el de tasa 0 es el dato accionable «si nadie entra»).
 export function curvaNucleoB(sheets, provincias, cfg, años, tasas) {
   const datos = provincias.map(prov => ({
+    cfgP:     cfgDeProvincia(cfg, prov),
     personas: personasDeProvincia(sheets, prov),
     demanda:  demandaDeObras(obrasDeProvincia(sheets, prov)),
   }));
@@ -290,9 +362,11 @@ export function curvaNucleoB(sheets, provincias, cfg, años, tasas) {
   const umbral = cfg.fai > 0 ? demandaBTotal / cfg.fai : 0;
 
   const nucleoEn = (Y, tasa) => {
-    const cfgK = { ...cfg, ingresosAnuales: tasa };
     let libres = 0;
-    for (const d of datos) libres += cruceEn(d.personas, d.demanda, Y, cfgK, 1).libresB;
+    for (const d of datos) {
+      const cfgK = { ...d.cfgP, ingresosAnuales: tasa };
+      libres += cruceEn(d.personas, d.demanda, Y, cfgK, 1).libresB;
+    }
     return libres;
   };
 
@@ -321,14 +395,17 @@ export function curvaNucleoB(sheets, provincias, cfg, años, tasas) {
 // Devuelve, por cada tasa, los activos en los años clave y si sostiene el nivel
 // de hoy (activos en el último año ≥ activos hoy). La tasa es POR provincia.
 export function tablaEscenarios(sheets, provincias, cfg, tasas, años) {
-  const porProv = provincias.map(prov => personasDeProvincia(sheets, prov));
-  const nProv = provincias.length;
-  const activosHoy = porProv.reduce((s, ps) => s + fuerzaActivaEn(ps, cfg.anioBase, cfg), 0);
-  const baseEn = Y => porProv.reduce((s, ps) => s + fuerzaActivaEn(ps, Y, cfg), 0);
+  const datos = provincias.map(prov => ({
+    cfgP: cfgDeProvincia(cfg, prov),
+    personas: personasDeProvincia(sheets, prov),
+  }));
+  const suma = datos.reduce((s, d) => s + d.cfgP.perseverancia, 0);
+  const activosHoy = datos.reduce((s, d) => s + fuerzaActivaEn(d.personas, cfg.anioBase, d.cfgP), 0);
+  const baseEn = Y => datos.reduce((s, d) => s + fuerzaActivaEn(d.personas, Y, d.cfgP), 0);
   const ultimo = años[años.length - 1];
   const filas = tasas.map(k => {
     const valores = {};
-    for (const Y of años) valores[Y] = baseEn(Y) + k * cfg.perseverancia * cohortesActivas(Y, cfg) * nProv;
+    for (const Y of años) valores[Y] = baseEn(Y) + k * cohortesActivas(Y, cfg) * suma;
     return { tasa: k, valores, sostiene: valores[ultimo] >= activosHoy };
   });
   return { activosHoy, filas };
