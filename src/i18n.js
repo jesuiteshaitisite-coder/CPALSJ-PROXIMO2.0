@@ -176,6 +176,21 @@ export const TEXTS = {
     pyColDeficit: 'Empiezan a faltar (año)',
     pyColK: 'Ingresos/año para sostener',
     pyColEstado: 'Situación en 2050',
+    pyColObrasB: 'Obras B (acompañadas)',
+    pyColCapacidadB: 'Capacidad de acompañamiento',
+    pyFaiControl: 'Capacidad de acompañamiento',
+    pyFaiUnidad: (n) => `${n} ${n === 1 ? 'obra' : 'obras'} B por jesuita`,
+    pyObrasCNota: (n) => `Obras C (gestión plenamente laical): ${n} — no requieren jesuita, por eso no se proyectan.`,
+    pyBFrase: (scope, n, capHoy, cap2050) => {
+      if (n === 0) return `${scope} no tiene obras Tipo B que acompañar.`;
+      const hoyTxt = capHoy >= n
+        ? `Hoy ${scope} puede acompañar holgadamente sus ${n} obras Tipo B (capacidad para unas ${capHoy})`
+        : `Hoy ${scope} queda al límite para acompañar sus ${n} obras Tipo B (capacidad para unas ${capHoy})`;
+      const futTxt = cap2050 >= n
+        ? `hacia 2050 la capacidad baja a unas ${cap2050}, pero todavía alcanza para las ${n}.`
+        : `hacia 2050 la capacidad baja a unas ${cap2050} y ya no alcanzaría para todas.`;
+      return `${hoyTxt}; ${futTxt}`;
+    },
     pyTotalCpalsj: 'TOTAL CPALSJ',
     pyNunca: 'No faltan',
     pySemaforo: { verde: 'Cubierto', amarillo: 'Atención', rojo: 'Déficit' },
@@ -360,6 +375,21 @@ export const TEXTS = {
     pyColDeficit: 'Começam a faltar (ano)',
     pyColK: 'Ingressos/ano para sustentar',
     pyColEstado: 'Situação em 2050',
+    pyColObrasB: 'Obras B (acompanhadas)',
+    pyColCapacidadB: 'Capacidade de acompanhamento',
+    pyFaiControl: 'Capacidade de acompanhamento',
+    pyFaiUnidad: (n) => `${n} ${n === 1 ? 'obra' : 'obras'} B por jesuíta`,
+    pyObrasCNota: (n) => `Obras C (gestão plenamente laical): ${n} — não requerem jesuíta, por isso não se projetam.`,
+    pyBFrase: (scope, n, capHoy, cap2050) => {
+      if (n === 0) return `${scope} não tem obras Tipo B para acompanhar.`;
+      const hoyTxt = capHoy >= n
+        ? `Hoje ${scope} pode acompanhar com folga suas ${n} obras Tipo B (capacidade para cerca de ${capHoy})`
+        : `Hoje ${scope} fica no limite para acompanhar suas ${n} obras Tipo B (capacidade para cerca de ${capHoy})`;
+      const futTxt = cap2050 >= n
+        ? `até 2050 a capacidade baixa para cerca de ${cap2050}, mas ainda alcança para as ${n}.`
+        : `até 2050 a capacidade baixa para cerca de ${cap2050} e já não alcançaria para todas.`;
+      return `${hoyTxt}; ${futTxt}`;
+    },
     pyTotalCpalsj: 'TOTAL CPALSJ',
     pyNunca: 'Não faltam',
     pySemaforo: { verde: 'Coberto', amarillo: 'Atenção', rojo: 'Déficit' },

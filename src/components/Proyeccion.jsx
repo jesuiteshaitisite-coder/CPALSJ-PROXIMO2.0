@@ -6,7 +6,8 @@ import { useAppState } from '../state/AppStateContext.jsx';
 import { provinciasDelAlcance } from '../utils/calculations.js';
 import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, serieTSsinRep,
-  chequearDiscrepancia, cohortesActivas, tablaEscenarios, ANIOS_CURVA, PROY_FIN,
+  chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCobertura,
+  ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -16,7 +17,7 @@ function fmt(n) {
 }
 
 const SEM_COLOR = { verde: 'var(--ok)', amarillo: 'var(--warn)', rojo: 'var(--alert)' };
-const SEM_SIMB  = { verde: '✓', amarillo: '⚠', rojo: '✕' };
+const SEM_SIMB  = { verde: '✓', amarillo: '⚠', rojo: '✗' };
 
 // Orden de los términos del glosario (claves de t.pyGloss)
 const GLOSARIO = [
@@ -42,8 +43,9 @@ function TooltipCurva({ active, payload, label, t }) {
 
 export default function Proyeccion({ t, data }) {
   const appState = useAppState();
-  const { alcance, provincia, haitiActivo, escenario } = appState;
+  const { alcance, provincia, haitiActivo, escenario, setEscenario } = appState;
   const [gloss, setGloss] = useState('activa');
+  const fai = escenario.fai;
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -67,8 +69,10 @@ export default function Proyeccion({ t, data }) {
       demandaA: a.demandaA + r.demanda.A,
       demandaB: a.demandaB + r.demanda.B,
       demandaC: a.demandaC + r.demanda.C,
+      capBHoy: a.capBHoy + r.capacidadBHoy,
+      capB2050: a.capB2050 + r.capacidadB2050,
       K: a.K + (r.equilibrioK || 0),
-    }), { personas: 0, activosHoy: 0, activos2050: 0, activos2080: 0, poolA2050: 0, demandaA: 0, demandaB: 0, demandaC: 0, K: 0 });
+    }), { personas: 0, activosHoy: 0, activos2050: 0, activos2080: 0, poolA2050: 0, demandaA: 0, demandaB: 0, demandaC: 0, capBHoy: 0, capB2050: 0, K: 0 });
 
     // Primer déficit A más cercano del alcance
     const deficits = tabla.map(r => r.primerDeficitA).filter(Boolean);
@@ -110,6 +114,8 @@ export default function Proyeccion({ t, data }) {
   const esCpalsj = alcance === 'cpalsj';
   const heroSub = esCpalsj ? t.pyHeroSub : provincia;
   const scopeLabel = esCpalsj ? 'CPALSJ' : provincia;
+  const fraseScope = esCpalsj ? 'la CPALSJ' : provincia;
+  const semBTotal = semaforoCobertura(tot.capBHoy, tot.demandaB);
 
   return (
     <div className="vista">
@@ -232,6 +238,22 @@ export default function Proyeccion({ t, data }) {
           <section className="panel">
             <h3>{t.pyTablaTitulo}</h3>
             <p className="panel-sub">{t.pyTablaSub}</p>
+
+            <div className="fai-control">
+              <label htmlFor="faiRange">
+                {t.pyFaiControl}: <strong>{t.pyFaiUnidad(fai)}</strong>
+              </label>
+              <input
+                id="faiRange"
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                value={fai}
+                onChange={e => setEscenario({ ...escenario, fai: Number(e.target.value) })}
+              />
+            </div>
+
             <div className="table-wrap">
               <table>
                 <thead>
@@ -245,6 +267,8 @@ export default function Proyeccion({ t, data }) {
                     <th className="num">{t.pyColDeficit}</th>
                     <th className="num">{t.pyColK}</th>
                     <th>{t.pyColEstado}</th>
+                    <th className="num">{t.pyColObrasB}</th>
+                    <th className="num">{t.pyColCapacidadB}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -263,6 +287,11 @@ export default function Proyeccion({ t, data }) {
                           {SEM_SIMB[r.semaforo2050]} {t.pySemaforo[r.semaforo2050]}
                         </span>
                       </td>
+                      <td className="num">{fmt(r.obrasB)}</td>
+                      <td className="num">
+                        {fmt(r.capacidadBHoy)}{' '}
+                        <span className="sem-badge" style={{ color: SEM_COLOR[r.semBHoy] }}>{SEM_SIMB[r.semBHoy]}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -278,11 +307,18 @@ export default function Proyeccion({ t, data }) {
                       <td className="num">—</td>
                       <td className="num">{tot.K}</td>
                       <td>—</td>
+                      <td className="num">{fmt(tot.demandaB)}</td>
+                      <td className="num">
+                        {fmt(tot.capBHoy)}{' '}
+                        <span className="sem-badge" style={{ color: SEM_COLOR[semBTotal] }}>{SEM_SIMB[semBTotal]}</span>
+                      </td>
                     </tr>
                   </tfoot>
                 )}
               </table>
             </div>
+            <p className="panel-nota">{t.pyBFrase(fraseScope, tot.demandaB, Math.round(tot.capBHoy), Math.round(tot.capB2050))}</p>
+            <p className="panel-nota">{t.pyObrasCNota(tot.demandaC)}</p>
             <p className="panel-nota">{t.pyNotaPie}</p>
           </section>
 

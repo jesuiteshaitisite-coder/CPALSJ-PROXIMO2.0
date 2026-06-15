@@ -1083,6 +1083,23 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap;
 }
 
+/* Control en vivo de Capacidad de acompañamiento (FAI) */
+.fai-control {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: #F8FAFC;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.fai-control label { font-size: 0.82rem; color: var(--texto); }
+.fai-control strong { color: var(--azul); }
+.fai-control input[type="range"] { flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--azul-medio); }
+
 /* Escenarios de ingreso: fila que mantiene el nivel de hoy */
 .table-wrap tbody tr.esc-row-ok,
 .table-wrap tbody tr.esc-row-ok:nth-child(even) { background: #E9F7EF; }

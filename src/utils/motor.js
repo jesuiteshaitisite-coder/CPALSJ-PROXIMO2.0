@@ -166,6 +166,15 @@ export function cruceEn(personas, demanda, Y, cfg, nProvincias = 1) {
   return { año: Y, activos, poolA, demanda, dedicados, huerfanasA, libresB, capacidadB, huerfanasB, coberturaB, semaforo };
 }
 
+// Semáforo de cobertura genérico (capacidad vs demanda): ✓ ≥100% · ⚠ 70–100% · ✗ <70%
+export function semaforoCobertura(capacidad, demanda) {
+  if (demanda <= 0) return 'verde';
+  const r = capacidad / demanda;
+  if (r >= 1) return 'verde';
+  if (r >= 0.7) return 'amarillo';
+  return 'rojo';
+}
+
 // ── Métricas clave por provincia ─────────────────────────────────────────────
 export function metricasProvincia(personas, obras, cfg) {
   const demanda = demandaDeObras(obras);
@@ -200,6 +209,7 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
     const obras    = obrasDeProvincia(sheets, prov);
     const m = metricasProvincia(personas, obras, cfg);
     const cruce2050 = cruceEn(personas, m.demanda, 2050, cfg, 1);
+    const cruceHoy  = cruceEn(personas, m.demanda, cfg.anioBase, cfg, 1);
     return {
       provincia: prov,
       personas: personas.length,
@@ -211,6 +221,12 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
       primerDeficitA: m.primerDeficitA,
       equilibrioK: m.equilibrioK,
       semaforo2050: cruce2050.semaforo,
+      // Obras B y capacidad de acompañamiento (reaccionan a cfg.fai)
+      obrasB: m.demanda.B,
+      obrasC: m.demanda.C,
+      capacidadBHoy: cruceHoy.capacidadB,
+      capacidadB2050: cruce2050.capacidadB,
+      semBHoy: semaforoCobertura(cruceHoy.capacidadB, m.demanda.B),
     };
   });
 }
