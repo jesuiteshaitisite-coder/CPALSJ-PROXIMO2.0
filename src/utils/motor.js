@@ -232,6 +232,23 @@ export function curvaEscenarios(sheets, provincias, cfg, años, tasas) {
   });
 }
 
+// ── Tabla de escenarios de ingreso (0..N al año) para el alcance ─────────────
+// Devuelve, por cada tasa, los activos en los años clave y si sostiene el nivel
+// de hoy (activos en el último año ≥ activos hoy). La tasa es POR provincia.
+export function tablaEscenarios(sheets, provincias, cfg, tasas, años) {
+  const porProv = provincias.map(prov => personasDeProvincia(sheets, prov));
+  const nProv = provincias.length;
+  const activosHoy = porProv.reduce((s, ps) => s + fuerzaActivaEn(ps, cfg.anioBase, cfg), 0);
+  const baseEn = Y => porProv.reduce((s, ps) => s + fuerzaActivaEn(ps, Y, cfg), 0);
+  const ultimo = años[años.length - 1];
+  const filas = tasas.map(k => {
+    const valores = {};
+    for (const Y of años) valores[Y] = baseEn(Y) + k * cfg.perseverancia * cohortesActivas(Y, cfg) * nProv;
+    return { tasa: k, valores, sostiene: valores[ultimo] >= activosHoy };
+  });
+  return { activosHoy, filas };
+}
+
 // ── Serie TS_SIN_REP de la hoja (control de calidad, no fuente) ──────────────
 export function serieTSsinRep(sheets, provincias) {
   const ts = sheets['TS_SIN_REP'];

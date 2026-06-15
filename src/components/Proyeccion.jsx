@@ -6,7 +6,7 @@ import { useAppState } from '../state/AppStateContext.jsx';
 import { provinciasDelAlcance } from '../utils/calculations.js';
 import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, serieTSsinRep,
-  chequearDiscrepancia, cohortesActivas, ANIOS_CURVA, PROY_FIN,
+  chequearDiscrepancia, cohortesActivas, tablaEscenarios, ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -82,10 +82,12 @@ export default function Proyeccion({ t, data }) {
       ? Math.max(0, Math.ceil((tot.activosHoy - base2100) / (cfg.perseverancia * ca * nProv)))
       : null;
 
-    return { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance };
+    const esc = tablaEscenarios(data.sheets, provs, cfg, [0, 1, 2, 3], [2050, 2080, 2100]);
+
+    return { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance, esc };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance } = calc;
+  const { tabla, curvaConTS, discrepancia, tot, primerDeficit, base2100, Kalcance, esc } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -185,6 +187,45 @@ export default function Proyeccion({ t, data }) {
               </LineChart>
             </ResponsiveContainer>
             <p className="panel-nota">{t.pyEquilibrio(fmt(base2100), Kalcance ?? '—')}</p>
+          </section>
+
+          {/* Escenarios de ingreso 0–3 */}
+          <section className="panel">
+            <h3>{t.pyEscTitulo}</h3>
+            <p className="panel-sub">{t.pyEscSub}</p>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{t.pyEscColEntran}</th>
+                    <th className="num">{t.pyCol2050}</th>
+                    <th className="num">{t.pyCol2080}</th>
+                    <th className="num">{t.pyEscCol2100}</th>
+                    <th>{t.pyEscColSostiene}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {esc.filas.map(f => (
+                    <tr key={f.tasa} className={f.tasa === Kalcance ? 'esc-row-ok' : undefined}>
+                      <td>{f.tasa === 0 ? `0 (${t.pyEscNadie})` : f.tasa}</td>
+                      <td className="num">{fmt(f.valores[2050])}</td>
+                      <td className="num">{fmt(f.valores[2080])}</td>
+                      <td className="num">{fmt(f.valores[2100])}</td>
+                      <td>
+                        {f.tasa === 0 && primerDeficit
+                          ? t.pyEscNoDeficit(primerDeficit)
+                          : f.sostiene
+                            ? <span className="esc-si">✓ {t.pyEscSi}</span>
+                            : t.pyEscNo}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {Kalcance !== null && Kalcance > 3 && (
+              <p className="panel-nota">{t.pyEscNotaK(Kalcance)}</p>
+            )}
           </section>
 
           {/* Tabla de validación por provincia */}

@@ -1083,6 +1083,12 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap;
 }
 
+/* Escenarios de ingreso: fila que mantiene el nivel de hoy */
+.table-wrap tbody tr.esc-row-ok,
+.table-wrap tbody tr.esc-row-ok:nth-child(even) { background: #E9F7EF; }
+.table-wrap tbody tr.esc-row-ok td { font-weight: 700; }
+.esc-si { color: var(--ok); font-weight: 700; }
+
 .disc-nota {
   color: var(--warn);
   font-weight: 600;
