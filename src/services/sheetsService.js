@@ -145,6 +145,23 @@ export async function loadAllData() {
     if (n !== null) params[clave] = n;
   }
 
-  cache = { sheets, params, warnings, cargadoEn: new Date() };
+  // Perseverancia POR PROVINCIA (hoja dedicada PERSEVERANCIA_PROVINCIA).
+  // Tolerante: si la hoja falta o una celda viene vacía / no numérica / fuera de
+  // 1–10, esa provincia NO entra al mapa y caerá al fallback global en el motor.
+  // Las claves se normalizan con normProv (unifica PERÚ/PERU, tildes, mayúsculas)
+  // para que el cruce con PERSONAS/OBRAS no falle por una tilde.
+  const persevPorProvincia = {};
+  const hojaPersev = sheets['PERSEVERANCIA_PROVINCIA'];
+  if (hojaPersev && hojaPersev.rows) {
+    for (const row of hojaPersev.rows) {
+      const prov = normProv(row['PROVINCIA']);
+      if (!prov) continue;
+      const n = parseNum(row['PERSEVERANCIA_DE_CADA_10']);
+      if (n !== null && n >= 1 && n <= 10) persevPorProvincia[prov] = n;
+    }
+  }
+  params.persevPorProvincia = persevPorProvincia;
+
+  cache = { sheets, params, persevPorProvincia, warnings, cargadoEn: new Date() };
   return cache;
 }

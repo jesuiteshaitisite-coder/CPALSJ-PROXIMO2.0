@@ -27,12 +27,16 @@ export const SHEET_NAMES = [
   'OBRAS_IMPRESCINDIBLES_PROVINCIA',
   'SOLIDARIDAD',
   'MADUREZ_OBRAS',
+  'PERSEVERANCIA_PROVINCIA',
 ];
 
 export const OPTIONAL_SHEETS = new Set([
   'SOLIDARIDAD',
   'MADUREZ_OBRAS',
   'OBRAS_IMPRESCINDIBLES_PROVINCIA',
+  // Perseverancia por provincia: se completa de a poco; si falta o viene
+  // incompleta, cada provincia cae al fallback global PERSEVERANCIA_DE_CADA_10.
+  'PERSEVERANCIA_PROVINCIA',
 ]);
 
 // Hojas cuyos encabezados de fila 1 se pierden en gviz (columnas tipadas como

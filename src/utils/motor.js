@@ -50,17 +50,11 @@ export function resolverCfg(params, escenario) {
   const pp = params || {};
   const persevGlobalDe10 = pp.PERSEVERANCIA_DE_CADA_10 ?? 6;
 
-  // Perseverancia POR PROVINCIA: la fija cada Provincial en PARAMETROS con una
-  // clave «PERSEVERANCIA_<PROVINCIA>» (p.ej. PERSEVERANCIA_CHILE = 7). Mientras
-  // una provincia no tenga su dato, cae al global (fallback 6). El sistema
-  // funciona desde hoy con datos incompletos y se afina al completarse.
-  const persevPorProv = {};
-  for (const k of Object.keys(pp)) {
-    if (k === 'PERSEVERANCIA_DE_CADA_10') continue;
-    const m = /^PERSEVERANCIA_(.+)$/.exec(k);
-    if (!m || pp[k] == null) continue;
-    persevPorProv[normProv(m[1])] = pp[k];
-  }
+  // Perseverancia POR PROVINCIA: cada Provincial la fija en la hoja dedicada
+  // PERSEVERANCIA_PROVINCIA (la capa de datos ya la leyó, normalizó por provincia
+  // y validó 1–10 → `params.persevPorProvincia`). Mientras una provincia no tenga
+  // su dato, cae al global (fallback 6). Funciona desde hoy con datos incompletos.
+  const persevPorProv = pp.persevPorProvincia || {};
 
   // Override puntual del slider (Fase 5): { provincia, de10 } | null. Cuando el
   // alcance es una sola provincia, el slider mueve la perseverancia de ESA prov.
@@ -83,15 +77,23 @@ export function resolverCfg(params, escenario) {
   };
 }
 
-// Perseverancia (de 10) que aplica a una provincia: override del slider →
-// dato de PARAMETROS de la provincia → fallback global.
+const clamp1a10 = n => Math.min(10, Math.max(1, n));
+
+// PUNTO ÚNICO de resolución de la perseverancia (de 10) de una provincia. Toda
+// la app pasa por aquí — no se duplica la lógica de fallback en ningún sitio.
+// Prioridad EXACTA:
+//   1. Override activo del slider (Fase 5) sobre ESA provincia → simula escenarios.
+//   2. Valor propio de la provincia en la hoja PERSEVERANCIA_PROVINCIA (ya leído,
+//      normalizado y validado 1–10 por la capa de datos).
+//   3. Fallback global PERSEVERANCIA_DE_CADA_10 (hoy 6).
+// Siempre acotado a 1–10 antes de devolverse (defensivo).
 export function persevDe10DeProvincia(cfg, prov) {
   const pv = normProv(prov);
   if (cfg.persevOverride && normProv(cfg.persevOverride.provincia) === pv) {
-    return cfg.persevOverride.de10;
+    return clamp1a10(cfg.persevOverride.de10);
   }
   const v = cfg.persevPorProv?.[pv];
-  return v != null ? v : cfg.persevGlobalDe10;
+  return clamp1a10(v != null ? v : cfg.persevGlobalDe10);
 }
 
 // Clona cfg fijando la perseverancia de una provincia, para reutilizar las
@@ -108,19 +110,30 @@ export function sumaPersev(provincias, cfg) {
   return provincias.reduce((s, prov) => s + persevDe10DeProvincia(cfg, prov) / 10, 0);
 }
 
-// Perseverancia ponderada del alcance (para mostrar/usar un único número en
-// CPALSJ): media de la perseverancia de cada provincia ponderada por su nº de
-// escolares en formación (los ingresos reales a los que se aplica). Si no hay
-// escolares, cae a media simple; si no hay provincias, al global.
+// Perseverancia ponderada del alcance: el único número representativo a MOSTRAR
+// cuando el alcance es CPALSJ (en la vista de una sola provincia devuelve su
+// propio valor, porque la media ponderada de un único elemento es ese elemento).
+// NO se usa en el cálculo demográfico (ahí cada provincia aplica su propio valor
+// a su gente); sirve para frases y glosario.
+// PONDERACIÓN = «futuros relevos» de cada provincia, que es justo lo que la
+// perseverancia afecta = (escolares en formación que se activarán) + (ingresos
+// anuales simulados que le corresponden a esa provincia, a lo largo del horizonte
+// = ingresosAnuales × nº de cohortes que siguen activas en 2100). Así una
+// provincia con 40 escolares pesa mucho más que una con 3. Si no hay relevos en
+// ninguna (0 escolares y 0 ingresos), cae a media simple; sin provincias, al global.
 export function perseveranciaPonderadaDe10(sheets, provincias, cfg) {
   if (!provincias.length) return cfg.persevGlobalDe10;
+  const ingresosFuturosPorProv = cfg.ingresosAnuales > 0
+    ? cfg.ingresosAnuales * cohortesActivas(PROY_FIN, cfg)
+    : 0;
   let num = 0, den = 0, sumaSimple = 0;
   for (const prov of provincias) {
     const de10 = persevDe10DeProvincia(cfg, prov);
     const escolares = personasDeProvincia(sheets, prov)
       .filter(p => fuerzaDe(p) === 'Formación').length;
-    num += de10 * escolares;
-    den += escolares;
+    const peso = escolares + ingresosFuturosPorProv; // futuros relevos de la provincia
+    num += de10 * peso;
+    den += peso;
     sumaSimple += de10;
   }
   return den > 0 ? num / den : sumaSimple / provincias.length;
