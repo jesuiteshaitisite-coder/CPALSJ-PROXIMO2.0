@@ -61,4 +61,7 @@ export const CONFIG_FALLBACKS = {
   FAI: 2,
   INGRESOS_ANUALES_BASE: 0,
   ANIO_BASE: 2026,
+  // Años que un jesuita pasa en formación antes de estar disponible para obras.
+  // Se lee de PARAMETROS si existe; este es el fallback (decisión Alex 15-jun-2026).
+  AÑOS_FORMACION: 10,
 };

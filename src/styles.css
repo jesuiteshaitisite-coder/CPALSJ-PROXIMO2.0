@@ -119,10 +119,14 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ── Header ── */
 
-.app-header {
+/* Bloque superior fijo: header + banner Haití + pestañas se fijan juntos */
+.topbar {
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.app-header {
   background: var(--azul);
   color: white;
   display: flex;
@@ -211,9 +215,6 @@ button { font-family: inherit; cursor: pointer; }
   padding: 8px 24px;
   font-size: 0.85rem;
   font-weight: 600;
-  position: sticky;
-  top: 58px;
-  z-index: 99;
 }
 
 /* ── Tabs ── */
@@ -1008,6 +1009,60 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .fuerza-barra > div { height: 100%; border-radius: 2px; }
+
+/* ── Proyección (Fase 4): glosario, semáforo, discrepancia ── */
+
+.glos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.glos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--azul);
+  background: #EEF3F8;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: help;
+}
+
+.glos-chip .glos-q {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--acento);
+  color: white;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+/* La tarjeta pop se abre a la izquierda para no salirse por la derecha */
+.glos-chip .tipo-tip { right: auto; left: 0; width: 280px; }
+.glos-chip:hover .tipo-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+
+.sem-badge {
+  font-weight: 700;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.disc-nota {
+  color: var(--warn);
+  font-weight: 600;
+  background: #FFF7EC;
+  border-left: 3px solid var(--warn);
+  padding: 7px 10px;
+  border-radius: 4px;
+}
 
 /* ── Footer ── */
 

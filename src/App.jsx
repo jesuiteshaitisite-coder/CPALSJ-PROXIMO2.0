@@ -6,6 +6,7 @@ import Login from './components/Login.jsx';
 import Header from './components/Header.jsx';
 import VistaPresente from './components/VistaPresente.jsx';
 import PresenciaApostolica from './components/PresenciaApostolica.jsx';
+import Proyeccion from './components/Proyeccion.jsx';
 
 const TABS = [
   { id: 'presente',   labelKey: 'tabPresente' },
@@ -21,19 +22,21 @@ function Dashboard() {
 
   return (
     <div className="app">
-      <Header t={t} />
+      <div className="topbar">
+        <Header t={t} />
 
-      <nav className="tabs">
-        {TABS.map(tb => (
-          <button
-            key={tb.id}
-            className={tab === tb.id ? 'tab active' : 'tab'}
-            onClick={() => setTab(tb.id)}
-          >
-            {t[tb.labelKey]}
-          </button>
-        ))}
-      </nav>
+        <nav className="tabs">
+          {TABS.map(tb => (
+            <button
+              key={tb.id}
+              className={tab === tb.id ? 'tab active' : 'tab'}
+              onClick={() => setTab(tb.id)}
+            >
+              {t[tb.labelKey]}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       <main className="content">
         {loading && (
@@ -57,10 +60,7 @@ function Dashboard() {
           ) : tab === 'obras' ? (
             <PresenciaApostolica t={t} data={data} />
           ) : (
-            <div className="placeholder">
-              <h2>{t[TABS.find(tb => tb.id === tab).labelKey]}</h2>
-              <p>{t.proximamente}</p>
-            </div>
+            <Proyeccion t={t} data={data} />
           )
         )}
       </main>
