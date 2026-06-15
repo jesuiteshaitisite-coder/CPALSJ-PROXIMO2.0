@@ -119,6 +119,7 @@ export default function Proyeccion({ t, data }) {
 
   const esCpalsj = alcance === 'cpalsj';
   const heroSub = esCpalsj ? t.pyHeroSub : provincia;
+  const scopeLabel = esCpalsj ? 'CPALSJ' : provincia;
 
   return (
     <div className="vista">
@@ -167,8 +168,7 @@ export default function Proyeccion({ t, data }) {
 
           {/* Curva de proyección */}
           <section className="panel">
-            <h3>{t.pyCurvaTitulo} — {heroSub}</h3>
-            <p className="panel-sub">{t.pyCurvaSub}</p>
+            <h3>{t.pyCurvaTitulo} — {scopeLabel}</h3>
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={curvaConTS} margin={{ top: 8, right: 16, bottom: 4, left: -8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" />
