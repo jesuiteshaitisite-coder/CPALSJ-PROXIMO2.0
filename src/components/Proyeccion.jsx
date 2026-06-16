@@ -8,8 +8,8 @@ import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
-  primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes,
-  ANIOS_CURVA, PROY_FIN,
+  primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes, cruceAlcanceEn,
+  ANIOS_CURVA, ANIOS_PROGRESION, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
 
@@ -114,10 +114,25 @@ export default function Proyeccion({ t, data }) {
     // Tabla de horizontes: cruce demanda↔oferta agregado por año (reactivo).
     const horizontes = tablaHorizontes(data.sheets, provs, cfg, [2030, 2050, 2080]);
 
-    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes };
+    // Línea de progresión agregada (fila TOTAL CPALSJ de la tabla de Cobertura).
+    const lineaTotalSem = ANIOS_PROGRESION.map(Y => ({ año: Y, sem: cruceAlcanceEn(data.sheets, provs, cfg, Y).semaforo }));
+
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem } = calc;
+
+  // Render de una línea de progresión (6 semáforos por año, comparables entre filas).
+  const LineaProgresion = ({ pasos }) => (
+    <div className="cob-prog">
+      {pasos.map(p => (
+        <span key={p.año} className="prog-cell" title={`${p.año}: ${t.pySemaforo[p.sem]}`}>
+          <span className="prog-sym" style={{ color: SEM_COLOR[p.sem] }}>{SEM_SIMB[p.sem]}</span>
+          <span className="prog-yr">{String(p.año).slice(2)}</span>
+        </span>
+      ))}
+    </div>
+  );
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -464,11 +479,7 @@ export default function Proyeccion({ t, data }) {
                       <td className="num">{fmt(r.poolA2050)}</td>
                       <td className="num">{r.primerDeficitA ?? t.pyNunca}</td>
                       <td className="num">{r.equilibrioK ?? '—'}</td>
-                      <td>
-                        <span className="sem-badge" style={{ color: SEM_COLOR[r.semaforo2050] }}>
-                          {SEM_SIMB[r.semaforo2050]} {t.pySemaforo[r.semaforo2050]}
-                        </span>
-                      </td>
+                      <td><LineaProgresion pasos={r.semaforosPorAnio} /></td>
                       <td className="num">{fmt(r.obrasB)}</td>
                       <td className="num">
                         {fmt(r.nucleoBHoy)} → {r.anioCruceB ?? '—'}{' '}
@@ -488,7 +499,7 @@ export default function Proyeccion({ t, data }) {
                       <td className="num">{fmt(tot.poolA2050)}</td>
                       <td className="num">—</td>
                       <td className="num">{tot.K}</td>
-                      <td>—</td>
+                      <td><LineaProgresion pasos={lineaTotalSem} /></td>
                       <td className="num">{fmt(tot.demandaB)}</td>
                       <td className="num">
                         {fmt(tot.nucleoBHoy)} → {nucleo.cruces[0] ?? '—'}{' '}

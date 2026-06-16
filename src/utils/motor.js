@@ -24,6 +24,9 @@ const EDAD_INGRESO_ACTIVO = 30;
 // Años con columna en TS_SIN_REP (sirven de eje del gráfico y de control).
 export const ANIOS_CURVA = [2026, 2030, 2035, 2040, 2045, 2050, 2055, 2060, 2070, 2080, 2090, 2100];
 
+// Años de la línea de progresión de semáforos en la tabla de Cobertura.
+export const ANIOS_PROGRESION = [2030, 2040, 2050, 2060, 2080, 2100];
+
 // ── Lectura de campos de una persona ────────────────────────────────────────
 
 // Año desde un valor gviz "Date(AAAA,M,D)" o un número/año suelto.
@@ -335,6 +338,10 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
       umbralB: cfg.fai > 0 ? m.demanda.B / cfg.fai : 0,
       anioCruceB,
       semCruceB: semaforoCruce(anioCruceB),
+      // Línea de progresión: semáforo de la provincia en cada año (reactivo).
+      semaforosPorAnio: ANIOS_PROGRESION.map(Y => ({
+        año: Y, sem: cruceEn(personas, m.demanda, Y, cfgP, 1).semaforo,
+      })),
     };
   });
 }

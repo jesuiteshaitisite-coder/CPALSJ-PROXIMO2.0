@@ -1132,6 +1132,20 @@ button { font-family: inherit; cursor: pointer; }
 }
 .hor-table thead th:first-child { width: 1%; }
 
+/* Línea de progresión de semáforos por año (en la tabla de Cobertura). Celdas de
+   ancho fijo para que los años queden alineados y comparables entre filas. */
+.cob-prog { display: inline-flex; gap: 1px; }
+.cob-prog .prog-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+}
+.cob-prog .prog-sym { font-size: 0.78rem; font-weight: 700; line-height: 1.05; }
+.cob-prog .prog-yr { font-size: 0.52rem; color: var(--gris); }
+/* En el pie (TOTAL CPALSJ, fondo oscuro) el año se aclara para que se lea. */
+.table-wrap tfoot .cob-prog .prog-yr { color: rgba(255,255,255,0.6); }
+
 .sem-badge {
   font-weight: 700;
   font-size: 0.78rem;
