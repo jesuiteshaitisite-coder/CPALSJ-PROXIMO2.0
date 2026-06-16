@@ -355,6 +355,8 @@ export function curvaEscenarios(sheets, provincias, cfg, años, tasas) {
     const coh = cohortesActivas(Y, cfg);
     const fila = { año: Y, base };
     for (const k of tasas) fila['r' + k] = base + k * coh * suma;
+    // Línea de simulación: la tasa de ingreso elegida en el panel (escenario).
+    fila.sim = base + cfg.ingresosAnuales * coh * suma;
     return fila;
   });
 }

@@ -7,7 +7,7 @@ import { provinciasDelAlcance } from '../utils/calculations.js';
 import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
-  sumaPersev, perseveranciaPonderadaDe10,
+  sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
   ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -47,7 +47,6 @@ export default function Proyeccion({ t, data }) {
   const { alcance, provincia, haitiActivo, escenario, setEscenario } = appState;
   const [gloss, setGloss] = useState('activa');
   const [tip, setTip] = useState(null); // pop de ayuda de las columnas de Cobertura
-  const fai = escenario.fai;
 
   // Pop flotante (posición fija → no lo recorta el scroll de la tabla). Se centra
   // bajo el encabezado y se acota a la pantalla para no salirse por los bordes.
@@ -106,10 +105,10 @@ export default function Proyeccion({ t, data }) {
     // Perseverancia ponderada del alcance (CPALSJ = media ponderada por escolares).
     const persevPond = perseveranciaPonderadaDe10(data.sheets, provs, cfg);
 
-    return { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond };
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -139,6 +138,19 @@ export default function Proyeccion({ t, data }) {
 
   // Fragmentos de texto: qué pasa con el cruce bajo reposición +1 / +3.
   const txtCruce = a => (a ? t.pyNucleoCruzaEn(a) : t.pyNucleoNoCruza);
+
+  // ── Panel de simulación (Fase 5 · Bloque A) ────────────────────────────────
+  const baseIngresos = data.params.INGRESOS_ANUALES_BASE ?? 0;
+  const baseFai = data.params.FAI ?? 2;
+  // Perseverancia del slider: en provincia, su valor resuelto (override si lo hay);
+  // en CPALSJ no se simula (se muestra el promedio ponderado real, solo lectura).
+  const persevSliderVal = esCpalsj ? Math.round(persevPond) : persevDe10DeProvincia(cfg, provincia);
+  const setIngresos = v => setEscenario({ ...escenario, ingresosAnuales: Number(v) });
+  const setFai = v => setEscenario({ ...escenario, fai: Number(v) });
+  const setPersevProv = v => setEscenario({ ...escenario, persevOverride: { provincia, de10: Number(v) } });
+  const restablecer = () => setEscenario({ ...escenario, ingresosAnuales: baseIngresos, fai: baseFai, persevOverride: null });
+  // ¿Hay algo simulado fuera de los valores de la hoja?
+  const haySimulacion = escenario.ingresosAnuales !== baseIngresos || escenario.fai !== baseFai || !!escenario.persevOverride;
 
   return (
     <div className="vista">
@@ -200,6 +212,61 @@ export default function Proyeccion({ t, data }) {
             </div>
           </section>
 
+          {/* Panel de simulación en vivo (Fase 5 · Bloque A) */}
+          <section className="panel sim-panel">
+            <div className="sim-head">
+              <div>
+                <h3>{t.pySimTitulo}</h3>
+                <p className="panel-sub">{t.pySimSub}</p>
+              </div>
+              <button
+                type="button"
+                className="sim-reset"
+                onClick={restablecer}
+                disabled={!haySimulacion}
+                title={t.pySimResetTitle}
+              >
+                ↺ {t.pySimReset}
+              </button>
+            </div>
+            <div className="sim-grid">
+              {/* Vocaciones nuevas al año */}
+              <div className="sim-row">
+                <label htmlFor="simIngresos">
+                  {t.pySimIngresos}: <strong>{t.pySimIngresosUnidad(escenario.ingresosAnuales, esCpalsj)}</strong>
+                </label>
+                <input id="simIngresos" type="range" min="0" max="5" step="1"
+                  value={escenario.ingresosAnuales} onChange={e => setIngresos(e.target.value)} />
+              </div>
+              {/* Perseverancia: solo simulable en alcance provincia */}
+              <div className={'sim-row' + (esCpalsj ? ' is-disabled' : '')}>
+                {esCpalsj ? (
+                  <>
+                    <label>{t.pySimPersev}: <strong>{t.pySimPersevCpalsj(persevPond.toFixed(1))}</strong></label>
+                    <input type="range" min="1" max="10" step="1" value={persevSliderVal} disabled readOnly />
+                    <span className="sim-nota">{t.pySimPersevCpalsjNota}</span>
+                  </>
+                ) : (
+                  <>
+                    <label htmlFor="simPersev">
+                      {t.pySimPersev}: <strong>{t.pySimPersevUnidad(persevSliderVal)}</strong>
+                    </label>
+                    <input id="simPersev" type="range" min="1" max="10" step="1"
+                      value={persevSliderVal} onChange={e => setPersevProv(e.target.value)} />
+                  </>
+                )}
+              </div>
+              {/* Capacidad de acompañamiento (FAI) */}
+              <div className="sim-row">
+                <label htmlFor="simFai">
+                  {t.pyFaiControl}: <strong>{t.pyFaiUnidad(escenario.fai)}</strong>
+                </label>
+                <input id="simFai" type="range" min="1" max="5" step="1"
+                  value={escenario.fai} onChange={e => setFai(e.target.value)} />
+              </div>
+            </div>
+          </section>
+
           {/* Curva de proyección */}
           <section className="panel">
             <h3>{t.pyCurvaTitulo} — {scopeLabel}</h3>
@@ -210,9 +277,10 @@ export default function Proyeccion({ t, data }) {
                 <YAxis tick={{ fontSize: 11, fill: COLORS.gris }} allowDecimals={false} />
                 <Tooltip content={<TooltipCurva t={t} />} />
                 <Legend wrapperStyle={{ fontSize: '0.74rem' }} />
-                <Line type="monotone" dataKey="base" name={t.pySerieBase} stroke={COLORS.rojoCl}   strokeWidth={2.4} dot={false} />
-                <Line type="monotone" dataKey="r1"   name={t.pySerie1}    stroke={COLORS.azulMedio} strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="r3"   name={t.pySerie3}    stroke={COLORS.verdeCl}  strokeWidth={2} dot={false} />
+                {/* Piso: sin reposición (gris, de referencia) */}
+                <Line type="monotone" dataKey="base" name={t.pySerieBase} stroke={COLORS.gris} strokeWidth={1.6} strokeDasharray="5 4" dot={false} />
+                {/* Tu simulación: la línea viva que siguen los sliders (dorada) */}
+                <Line type="monotone" dataKey="sim" name={t.pySerieSim(escenario.ingresosAnuales)} stroke={COLORS.acento} strokeWidth={3.2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
             <p className="panel-nota">{t.pyEquilibrio(fmt(base2100), Kalcance ?? '—')}</p>
@@ -237,13 +305,23 @@ export default function Proyeccion({ t, data }) {
                   strokeWidth={1.6}
                   label={{ value: t.pyNucleoUmbral(Math.round(nucleo.umbral)), position: 'insideTopRight', fontSize: 11, fill: COLORS.gris }}
                 />
-                {/* Marca del año de cruce (curva sin reposición) */}
+                {/* Marca del año de cruce (curva sin reposición) — con pop de ayuda */}
                 {nucleo.cruces[0] && (
                   <ReferenceLine
                     x={nucleo.filas.reduce((best, f) => (f.año >= nucleo.cruces[0] && (best === null || f.año < best) ? f.año : best), null) ?? nucleo.cruces[0]}
                     stroke={COLORS.rojoCl}
                     strokeDasharray="2 3"
-                    label={{ value: t.pyNucleoCruceMarca(nucleo.cruces[0]), position: 'top', fontSize: 11, fill: COLORS.rojoCl }}
+                    label={({ viewBox }) => (
+                      <g
+                        style={{ cursor: 'help' }}
+                        onMouseEnter={e => mostrarTip(e, t.pyNucleoCruceAyuda)}
+                        onMouseLeave={ocultarTip}
+                      >
+                        <text x={viewBox.x} y={viewBox.y - 8} fill={COLORS.rojoCl} fontSize={11} fontWeight={600} textAnchor="middle">
+                          {t.pyNucleoCruceMarca(nucleo.cruces[0])} ⓘ
+                        </text>
+                      </g>
+                    )}
                   />
                 )}
                 <Line type="monotone" dataKey="n0" name={t.pySerieBase} stroke={COLORS.rojoCl}   strokeWidth={2.4} dot={false} />
@@ -298,21 +376,6 @@ export default function Proyeccion({ t, data }) {
           <section className="panel">
             <h3>{t.pyTablaTitulo}</h3>
             <p className="panel-sub">{t.pyTablaSub} {t.pyCobAyuda}</p>
-
-            <div className="fai-control">
-              <label htmlFor="faiRange">
-                {t.pyFaiControl}: <strong>{t.pyFaiUnidad(fai)}</strong>
-              </label>
-              <input
-                id="faiRange"
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value={fai}
-                onChange={e => setEscenario({ ...escenario, fai: Number(e.target.value) })}
-              />
-            </div>
 
             <div className="table-wrap">
               <table className="cob-table">

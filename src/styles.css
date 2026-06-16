@@ -1134,6 +1134,52 @@ button { font-family: inherit; cursor: pointer; }
 .fai-control strong { color: var(--azul); }
 .fai-control input[type="range"] { flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--azul-medio); }
 
+/* ── Panel de simulación en vivo (Bloque A) ── */
+.sim-panel { border-left: 3px solid var(--acento); }
+.sim-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sim-reset {
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--azul);
+  background: #F8FAFC;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.sim-reset:hover:not(:disabled) { background: #EEF3F8; border-color: var(--azul-medio); }
+.sim-reset:disabled { opacity: 0.45; cursor: default; }
+
+.sim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.sim-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.sim-row label { font-size: 0.82rem; color: var(--texto); }
+.sim-row strong { color: var(--azul); }
+.sim-row input[type="range"] { width: 100%; accent-color: var(--acento); }
+.sim-row.is-disabled { opacity: 0.72; }
+.sim-row.is-disabled input[type="range"] { accent-color: var(--gris); cursor: not-allowed; }
+.sim-nota { font-size: 0.72rem; color: var(--gris); line-height: 1.4; }
+
 /* Escenarios de ingreso: fila que mantiene el nivel de hoy */
 .table-wrap tbody tr.esc-row-ok,
 .table-wrap tbody tr.esc-row-ok:nth-child(even) { background: #E9F7EF; }
