@@ -8,7 +8,7 @@ import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
-  primerDeficitASim, fuerzaActivaSimEn,
+  primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes,
   ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -58,6 +58,7 @@ export default function Proyeccion({ t, data }) {
   };
   const ocultarTip = () => setTip(null);
   const thTip = i => ({ onMouseEnter: e => mostrarTip(e, t.pyCobCards[i].d), onMouseLeave: ocultarTip });
+  const thTipHor = i => ({ onMouseEnter: e => mostrarTip(e, t.pyHorCols[i].d), onMouseLeave: ocultarTip });
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -110,10 +111,13 @@ export default function Proyeccion({ t, data }) {
     // Perseverancia ponderada del alcance (CPALSJ = media ponderada por escolares).
     const persevPond = perseveranciaPonderadaDe10(data.sheets, provs, cfg);
 
-    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond };
+    // Tabla de horizontes: cruce demanda↔oferta agregado por año (reactivo).
+    const horizontes = tablaHorizontes(data.sheets, provs, cfg, [2030, 2050, 2080]);
+
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -346,6 +350,46 @@ export default function Proyeccion({ t, data }) {
             </ResponsiveContainer>
             <p className="panel-nota">{t.pyNucleoNotaCruce(nucleo.cruces[0])}</p>
             <p className="panel-nota">{t.pyNucleoNotaRep(txtCruce(nucleo.cruces[1]), txtCruce(nucleo.cruces[3]))}</p>
+          </section>
+
+          {/* Tabla de horizontes 2030 / 2050 / 2080 (cruce reactivo al slider) */}
+          <section className="panel">
+            <h3>{t.pyHorTitulo} — {scopeLabel}</h3>
+            <p className="panel-sub">{t.pyHorSub} {t.pyCobAyuda}</p>
+            <div className="table-wrap">
+              <table className="hor-table">
+                <thead>
+                  <tr>
+                    <th />
+                    {horizontes.map(h => <th key={h.año} className="num">{h.año}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { i: 1, get: h => fmt(h.activos) },
+                    { i: 2, get: h => fmt(h.demandaA) },
+                    { i: 3, get: h => fmt(h.poolA) },
+                    { i: 4, get: h => (h.huerfanasA > 0 ? fmt(h.huerfanasA) : '—') },
+                    { i: 5, get: h => fmt(h.demandaB) },
+                    { i: 6, get: h => fmt(h.cubiertasB) },
+                    { i: 7, get: h => (h.huerfanasB > 0 ? fmt(h.huerfanasB) : '—') },
+                    { i: 8, estado: true },
+                  ].map(m => (
+                    <tr key={m.i}>
+                      <td className="hor-rowlabel" {...thTipHor(m.i)}>{t.pyHorCols[m.i].t}</td>
+                      {horizontes.map(h => (
+                        <td key={h.año} className="num">
+                          {m.estado
+                            ? <span className="sem-badge" style={{ color: SEM_COLOR[h.semaforo] }}>{SEM_SIMB[h.semaforo]} {t.pySemaforo[h.semaforo]}</span>
+                            : m.get(h)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="panel-nota">{t.pyHorNota}</p>
           </section>
 
           {/* Escenarios de ingreso 0–3 */}

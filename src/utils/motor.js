@@ -374,6 +374,35 @@ export function fuerzaActivaSimEn(sheets, provincias, cfg, Y) {
   return s;
 }
 
+// ── Cruce demanda↔oferta agregado por año (tabla de horizontes, reactivo) ─────
+// Suma PROVINCIA A PROVINCIA el cruce de un año (cada una con su perseverancia y
+// la reposición simulada). Las obras huérfanas A/B se suman por provincia (son
+// topes por provincia). Reacciona al slider (ingresos, FAI, perseverancia prov).
+export function cruceAlcanceEn(sheets, provincias, cfg, Y) {
+  let activos = 0, poolA = 0, demandaA = 0, huerfanasA = 0, demandaB = 0, capacidadB = 0, huerfanasB = 0;
+  for (const prov of provincias) {
+    const cfgP = cfgDeProvincia(cfg, prov);
+    const personas = personasDeProvincia(sheets, prov);
+    const demanda = demandaDeObras(obrasDeProvincia(sheets, prov));
+    const c = cruceEn(personas, demanda, Y, cfgP, 1);
+    activos += c.activos; poolA += c.poolA;
+    demandaA += demanda.A; huerfanasA += c.huerfanasA;
+    demandaB += demanda.B; capacidadB += c.capacidadB; huerfanasB += c.huerfanasB;
+  }
+  const cubiertasB = Math.max(0, demandaB - huerfanasB);
+  let semaforo;
+  if (huerfanasA > 0) semaforo = 'rojo';
+  else {
+    const cob = demandaB > 0 ? cubiertasB / demandaB : 1;
+    semaforo = cob >= 1 ? 'verde' : cob >= 0.7 ? 'amarillo' : 'rojo';
+  }
+  return { año: Y, activos, poolA, demandaA, huerfanasA, demandaB, capacidadB, cubiertasB, huerfanasB, semaforo };
+}
+
+export function tablaHorizontes(sheets, provincias, cfg, años) {
+  return años.map(Y => cruceAlcanceEn(sheets, provincias, cfg, Y));
+}
+
 // ── Curva de escenarios para el gráfico (agrega un conjunto de provincias) ────
 // tasas = lista de ingresos/año a graficar (p.ej. [0,1,3]). En CPALSJ la tasa
 // es POR provincia, así que la reposición se multiplica por nº de provincias.

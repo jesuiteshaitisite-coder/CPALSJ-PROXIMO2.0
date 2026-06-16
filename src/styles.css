@@ -1121,6 +1121,17 @@ button { font-family: inherit; cursor: pointer; }
 .esc-table tbody td { white-space: normal; }
 .esc-table th, .esc-table td { padding-left: 9px; padding-right: 9px; }
 
+/* Tabla de horizontes (transpuesta): años en columnas, métricas en filas. La
+   primera columna es la etiqueta de la métrica, con pop de ayuda al hover. */
+.hor-table .hor-rowlabel {
+  text-align: left;
+  font-weight: 600;
+  color: var(--azul);
+  cursor: help;
+  white-space: normal;
+}
+.hor-table thead th:first-child { width: 1%; }
+
 .sem-badge {
   font-weight: 700;
   font-size: 0.78rem;
