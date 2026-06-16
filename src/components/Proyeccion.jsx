@@ -8,6 +8,7 @@ import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
+  primerDeficitASim, fuerzaActivaSimEn,
   ANIOS_CURVA, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -87,9 +88,13 @@ export default function Proyeccion({ t, data }) {
       K: a.K + (r.equilibrioK || 0),
     }), { personas: 0, activosHoy: 0, activos2050: 0, activos2080: 0, poolA2050: 0, demandaA: 0, demandaB: 0, demandaC: 0, nucleoBHoy: 0, K: 0 });
 
-    // Primer déficit A más cercano del alcance
+    // Primer déficit A más cercano del alcance (ANCLA «si nadie entra», para la narrativa)
     const deficits = tabla.map(r => r.primerDeficitA).filter(Boolean);
     const primerDeficit = deficits.length ? Math.min(...deficits) : null;
+
+    // KPIs proyectivos REACTIVOS al slider de ingresos (con reposición simulada)
+    const primerDeficitSim = primerDeficitASim(data.sheets, provs, cfg);
+    const fuerza2080Sim = fuerzaActivaSimEn(data.sheets, provs, cfg, 2080);
 
     // Número de equilibrio del alcance (recalculado sobre el agregado, no suma
     // de Ks). La sensibilidad por ingreso/año es cohortes × Σ perseverancia_prov.
@@ -105,10 +110,10 @@ export default function Proyeccion({ t, data }) {
     // Perseverancia ponderada del alcance (CPALSJ = media ponderada por escolares).
     const persevPond = perseveranciaPonderadaDe10(data.sheets, provs, cfg);
 
-    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond };
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, base2100, Kalcance, esc, persevPond } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond } = calc;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -152,6 +157,11 @@ export default function Proyeccion({ t, data }) {
   // ¿Hay algo simulado fuera de los valores de la hoja?
   const haySimulacion = escenario.ingresosAnuales !== baseIngresos || escenario.fai !== baseFai || !!escenario.persevOverride;
 
+  // Etiqueta de escenario para los KPIs proyectivos (hablan el idioma del slider).
+  const ingActual = escenario.ingresosAnuales;
+  const escTag = ingActual > 0 ? t.pyEscCon(ingActual) : t.pyEscSiNadie;
+  const kSostiene = Kalcance != null && ingActual >= Kalcance;
+
   return (
     <div className="vista">
       <div className="vista-general">
@@ -169,18 +179,23 @@ export default function Proyeccion({ t, data }) {
             <div className="hero-stat">
               <div className="hero-stat-num">{Kalcance ?? '—'}<span className="hero-stat-unit"> /año</span></div>
               <div className="hero-stat-lbl">{t.pyMiniK}</div>
+              {ingActual > 0 && Kalcance != null && (
+                <div className={'hero-stat-esc' + (kSostiene ? ' is-ok' : ' is-no')}>{t.pyKSimula(ingActual, kSostiene)}</div>
+              )}
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-num">{primerDeficit ?? '—'}</div>
+              <div className="hero-stat-num">{primerDeficitSim ?? '> 2100'}</div>
               <div className="hero-stat-lbl">{t.pyMiniDeficit}</div>
+              <div className="hero-stat-esc">{escTag}</div>
             </div>
             <div className="hero-stat">
               <div className="hero-stat-num">{fmt(tot.demandaA)}</div>
               <div className="hero-stat-lbl">{t.pyMiniDemandaA}</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-num">{fmt(tot.activos2080)}</div>
+              <div className="hero-stat-num">{fmt(fuerza2080Sim)}</div>
               <div className="hero-stat-lbl">{t.pyMiniColapso}</div>
+              <div className="hero-stat-esc">{escTag}</div>
             </div>
           </div>
         </aside>

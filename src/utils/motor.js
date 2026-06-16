@@ -339,6 +339,41 @@ export function proyectarPorProvincia(sheets, provincias, cfg) {
   });
 }
 
+// ── KPIs reactivos al slider de ingresos (incluyen la reposición simulada) ────
+// La tabla Cobertura y la narrativa siguen leyendo el ancla «si nadie entra»
+// (sin reposición); estos, en cambio, hablan el idioma del slider. Con
+// ingresos = 0 coinciden EXACTO con el ancla (regresión).
+
+// 1er déficit A del alcance CON reposición: primer año en que, sumando los
+// ingresos simulados, el pool dedicable cae por debajo de las obras A (mínimo
+// sobre las provincias del alcance).
+export function primerDeficitASim(sheets, provincias, cfg) {
+  let primero = null;
+  for (const prov of provincias) {
+    const cfgP = cfgDeProvincia(cfg, prov);
+    const personas = personasDeProvincia(sheets, prov);
+    const demanda = demandaDeObras(obrasDeProvincia(sheets, prov));
+    for (let Y = cfg.anioBase; Y <= PROY_FIN; Y++) {
+      if (poolABaseEn(personas, Y, cfgP) + reposicionEn(Y, cfgP, 1) < demanda.A) {
+        if (primero === null || Y < primero) primero = Y;
+        break;
+      }
+    }
+  }
+  return primero;
+}
+
+// Fuerza activa del alcance en un año CON reposición (reactiva al slider).
+export function fuerzaActivaSimEn(sheets, provincias, cfg, Y) {
+  let s = 0;
+  for (const prov of provincias) {
+    const cfgP = cfgDeProvincia(cfg, prov);
+    const personas = personasDeProvincia(sheets, prov);
+    s += fuerzaActivaEn(personas, Y, cfgP) + reposicionEn(Y, cfgP, 1);
+  }
+  return s;
+}
+
 // ── Curva de escenarios para el gráfico (agrega un conjunto de provincias) ────
 // tasas = lista de ingresos/año a graficar (p.ej. [0,1,3]). En CPALSJ la tasa
 // es POR provincia, así que la reposición se multiplica por nº de provincias.

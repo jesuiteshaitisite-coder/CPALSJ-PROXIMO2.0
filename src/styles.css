@@ -793,6 +793,16 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 2px;
 }
 
+/* Etiqueta de escenario bajo los KPIs proyectivos (idioma del slider) */
+.hero-stat-esc {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--acento);
+  margin-top: 4px;
+}
+.hero-stat-esc.is-ok { color: #7EE2A8; }
+.hero-stat-esc.is-no { color: #F0A6A0; }
+
 /* ── KPI strip (semántica de color) ── */
 
 .kpi2 {
