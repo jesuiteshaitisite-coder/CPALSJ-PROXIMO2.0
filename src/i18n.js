@@ -282,6 +282,39 @@ export const TEXTS = {
     pyMdMasCubiertas: (n) => `+${n} obras cubiertas ✓`,
     pyMdMenosCubiertas: (n) => `−${n} obras ✗`,
     pyPistasNota: 'Las tarjetas comparan contra "no hacer nada" y muestran el efecto de cada palanca por separado (no acumulado). Las estrellas son orientación gruesa; el discernimiento institucional considera factores que el modelo no captura.',
+
+    // ── Bloque D.1 — Heatmap de sostenibilidad ──
+    pyHeatTitulo: 'Sostenibilidad por provincia',
+    pyHeatSub: 'Un puntaje de 0 a 100 por año que combina la cobertura de las obras de dirección, el acompañamiento de las obras B y la holgura de personal. Verde = sostenible; rojo = en riesgo.',
+    pyHeatCols: [
+      { t: 'Provincia', d: 'La provincia o región jesuita a la que pertenece la fila.' },
+      { t: 'Tendencia', d: 'Cuánto cambia el puntaje de sostenibilidad entre 2030 y 2080. ▼ rojo = cae (pierde sostenibilidad); ▲ verde = mejora; ▬ se mantiene.' },
+    ],
+    pyHeatAñoAyuda: (Y) => `Puntaje de sostenibilidad en ${Y} (0 a 100): 50 puntos por cubrir las obras de dirección (A), 30 por acompañar las obras B y 20 por tener holgura de jesuitas disponibles sobre lo justo.`,
+    pyHeatTendencia: 'Tendencia',
+    pyHeatPromedio: 'PROMEDIO CPALSJ',
+    pyHeatNota: 'El puntaje combina cobertura de dirección (50%), acompañamiento de obras B (30%) y holgura de personal (20%, el margen de jesuitas disponibles por encima de lo justo). La columna Tendencia muestra cuánto cae el puntaje entre 2030 y 2080.',
+
+    // ── Bloque D.2 — Mapa de riesgos ──
+    pyRiesgoTitulo: 'Mapa de riesgos',
+    pyRiesgoSub: 'Cada provincia situada según cuándo empieza a faltar gente (eje horizontal) y cuántas obras quedarían sin jesuita en 2080 (eje vertical). El tamaño del punto es el número de obras de dirección que tiene hoy; el color, su situación en 2050.',
+    pyRiesgoEjeX: 'Años hasta que empieza a faltar gente  →',
+    pyRiesgoEjeY: 'Obras sin jesuita en 2080',
+    pyRiesgoRefX: (n) => `mediana (${n} años)`,
+    pyRiesgoRef25: '25 años (ref.)',
+    pyRiesgoRefY: (n) => `mediana (${n})`,
+    pyRiesgoCuad: {
+      prioritario:  { t: 'Prioritario', d: 'Déficit antes que la mitad de las provincias y muchas obras sin cubrir hacia 2080. Concentra aquí la atención (no es urgencia absoluta: ninguna provincia cae en menos de 25 años).' },
+      planificable: { t: 'Planificable', d: 'El déficit llega más tarde que la mitad de las provincias, pero el volumen de obras sin cubrir hacia 2080 es alto. Conviene planificar.' },
+      vocacion:     { t: 'Revisar vocación', d: 'El déficit de personas llega antes que la mitad de las provincias aunque queden pocas obras sin cubrir: el reto está en el flujo de vocaciones.' },
+      estable:      { t: 'Estable', d: 'El déficit llega más tarde que la mitad de las provincias y pocas obras quedarían sin jesuita. Situación holgada.' },
+    },
+    pyRiesgoVacio: 'Sin provincias en este cuadrante.',
+    pyRiesgoNota: 'Los cortes son medianas del grupo: la vertical separa las provincias cuyo déficit llega antes que la mitad de las demás (urgencia relativa, no absoluta); la horizontal, las que dejarían más obras sin cubrir en 2080. La línea gris punteada marca los 25 años como referencia. El tamaño del punto crece con la raíz del número de obras, para que las provincias grandes no aplasten a las pequeñas.',
+    pyRiesgoTtX: 'Empieza a faltar:',
+    pyRiesgoTtY: 'Obras sin jesuita 2080:',
+    pyRiesgoTtSize: 'Obras de dirección hoy:',
+
     pyGloss: {
       activa:  { t: 'Fuerza activa', d: 'Jesuitas en edad de trabajar (de 30 a 84 años) que están en plena capacidad o acompañando obras. A los 85 se considera que dejan el servicio activo. Es la línea principal del gráfico: cuántos jesuitas hay realmente disponibles cada año.' },
       poolA:   { t: 'Pool A (dedicables)', d: 'El grupo de la fuerza activa que puede ponerse al frente de una obra que necesita dirección jesuita directa (Tipo A): están disponibles para asignación. No todo jesuita activo puede dirigir una obra; este es el que sí.' },
@@ -568,6 +601,39 @@ export const TEXTS = {
     pyMdMasCubiertas: (n) => `+${n} obras cobertas ✓`,
     pyMdMenosCubiertas: (n) => `−${n} obras ✗`,
     pyPistasNota: 'Os cartões comparam contra "não fazer nada" e mostram o efeito de cada alavanca isoladamente (não acumulado). As estrelas são orientação grossa; o discernimento institucional considera fatores que o modelo não capta.',
+
+    // ── Bloco D.1 — Mapa de calor de sustentabilidade ──
+    pyHeatTitulo: 'Sustentabilidade por província',
+    pyHeatSub: 'Uma pontuação de 0 a 100 por ano que combina a cobertura das obras de direção, o acompanhamento das obras B e a folga de pessoal. Verde = sustentável; vermelho = em risco.',
+    pyHeatCols: [
+      { t: 'Província', d: 'A província ou região jesuíta a que pertence a linha.' },
+      { t: 'Tendência', d: 'Quanto muda a pontuação de sustentabilidade entre 2030 e 2080. ▼ vermelho = cai (perde sustentabilidade); ▲ verde = melhora; ▬ mantém-se.' },
+    ],
+    pyHeatAñoAyuda: (Y) => `Pontuação de sustentabilidade em ${Y} (0 a 100): 50 pontos por cobrir as obras de direção (A), 30 por acompanhar as obras B e 20 por ter folga de jesuítas disponíveis acima do mínimo.`,
+    pyHeatTendencia: 'Tendência',
+    pyHeatPromedio: 'MÉDIA CPALSJ',
+    pyHeatNota: 'A pontuação combina cobertura de direção (50%), acompanhamento de obras B (30%) e folga de pessoal (20%, a margem de jesuítas disponíveis acima do mínimo). A coluna Tendência mostra quanto cai a pontuação entre 2030 e 2080.',
+
+    // ── Bloco D.2 — Mapa de riscos ──
+    pyRiesgoTitulo: 'Mapa de riscos',
+    pyRiesgoSub: 'Cada província situada conforme quando começa a faltar gente (eixo horizontal) e quantas obras ficariam sem jesuíta em 2080 (eixo vertical). O tamanho do ponto é o número de obras de direção que tem hoje; a cor, a sua situação em 2050.',
+    pyRiesgoEjeX: 'Anos até começar a faltar gente  →',
+    pyRiesgoEjeY: 'Obras sem jesuíta em 2080',
+    pyRiesgoRefX: (n) => `mediana (${n} anos)`,
+    pyRiesgoRef25: '25 anos (ref.)',
+    pyRiesgoRefY: (n) => `mediana (${n})`,
+    pyRiesgoCuad: {
+      prioritario:  { t: 'Prioritário', d: 'Déficit antes da metade das províncias e muitas obras sem cobrir até 2080. Concentre aqui a atenção (não é urgência absoluta: nenhuma província cai em menos de 25 anos).' },
+      planificable: { t: 'Planejável', d: 'O déficit chega mais tarde que a metade das províncias, mas o volume de obras sem cobrir até 2080 é alto. Convém planejar.' },
+      vocacion:     { t: 'Rever vocação', d: 'O déficit de pessoas chega antes da metade das províncias ainda que fiquem poucas obras sem cobrir: o desafio está no fluxo de vocações.' },
+      estable:      { t: 'Estável', d: 'O déficit chega mais tarde que a metade das províncias e poucas obras ficariam sem jesuíta. Situação folgada.' },
+    },
+    pyRiesgoVacio: 'Sem províncias neste quadrante.',
+    pyRiesgoNota: 'Os cortes são medianas do grupo: a vertical separa as províncias cujo déficit chega antes da metade das demais (urgência relativa, não absoluta); a horizontal, as que deixariam mais obras sem cobrir em 2080. A linha cinza pontilhada marca os 25 anos como referência. O tamanho do ponto cresce com a raiz do número de obras, para que as províncias grandes não esmaguem as pequenas.',
+    pyRiesgoTtX: 'Começa a faltar:',
+    pyRiesgoTtY: 'Obras sem jesuíta 2080:',
+    pyRiesgoTtSize: 'Obras de direção hoje:',
+
     pyGloss: {
       activa:  { t: 'Força ativa', d: 'Jesuítas em idade de trabalhar (de 30 a 84 anos) em plena capacidade ou acompanhando obras. Aos 85 considera-se que deixam o serviço ativo. É a linha principal do gráfico: quantos jesuítas há realmente disponíveis a cada ano.' },
       poolA:   { t: 'Pool A (dedicáveis)', d: 'O grupo da força ativa que pode assumir uma obra que precisa de direção jesuíta direta (Tipo A): estão disponíveis para alocação. Nem todo jesuíta ativo pode dirigir uma obra; este é o que pode.' },

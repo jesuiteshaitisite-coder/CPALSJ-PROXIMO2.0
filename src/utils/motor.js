@@ -580,3 +580,96 @@ export function chequearDiscrepancia(curvaBase, tsMap) {
   }
   return { marca, maxAbs: Math.round(maxAbs), añoMarca };
 }
+
+// ── Bloque D.1 — Heatmap de sostenibilidad (0–100) por provincia × año ────────
+// Puntaje = 50·coberturaA + 30·coberturaB + 20·holgura, donde:
+//   · coberturaA = obras A cubiertas / obras A  (dedicados/demanda.A), acotado 0–1.
+//   · coberturaB = cobertura de las obras B      (ya 0–1 en cruceEn).
+//   · holgura    = MARGEN del pool A sobre su demanda: min(1, max(0, poolA/demA − 1)).
+//        Premia el colchón (el doble de la demanda = 20 pts llenos; justo = 0 pts).
+//        Decidido con Alex (17-jun): la lectura literal poolA/demA sería redundante
+//        con la cobertura A; el margen sí distingue provincias holgadas de las justas.
+// Reactivo al panel (cfg). Devuelve filas por provincia (puntajes por año + la
+// tendencia 2030→2080) y la fila promedio CPALSJ ponderada por nº de personas.
+export function sostenibilidadProvincia(sheets, provincias, cfg, años) {
+  const primero = años[0], ultimo = años[años.length - 1];
+  const caida = m => (m[2080] ?? m[ultimo]) - (m[2030] ?? m[primero]); // <0 = pierde sostenibilidad
+
+  const puntajeEn = (personas, demanda, cfgP, Y) => {
+    const c = cruceEn(personas, demanda, Y, cfgP, 1);
+    const cobA = demanda.A > 0 ? Math.min(1, c.dedicados / demanda.A) : 1;
+    const cobB = c.coberturaB; // ya 0–1
+    const holg = demanda.A > 0 ? Math.min(1, Math.max(0, c.poolA / demanda.A - 1)) : 1;
+    return 50 * cobA + 30 * cobB + 20 * holg; // 0–100
+  };
+
+  const filas = provincias.map(prov => {
+    const cfgP     = cfgDeProvincia(cfg, prov);
+    const personas = personasDeProvincia(sheets, prov);
+    const demanda  = demandaDeObras(obrasDeProvincia(sheets, prov));
+    const puntajes = {};
+    for (const Y of años) puntajes[Y] = puntajeEn(personas, demanda, cfgP, Y);
+    return { provincia: prov, personas: personas.length, puntajes, tendencia: caida(puntajes) };
+  });
+
+  // Promedio CPALSJ ponderado por nº de personas (coherente con el resto del dash).
+  const totPers = filas.reduce((s, f) => s + f.personas, 0) || 1;
+  const promedio = {};
+  for (const Y of años) promedio[Y] = filas.reduce((s, f) => s + f.puntajes[Y] * f.personas, 0) / totPers;
+
+  return { filas, promedio, tendenciaProm: caida(promedio) };
+}
+
+// ── Bloque D.2 — Mapa de riesgos (scatter) ────────────────────────────────────
+// Un punto por provincia:
+//   · x       = años hasta el 1er déficit A (primerDeficitA − anioBase); si nunca
+//               falta, se ancla al fin del horizonte (provincia muy estable).
+//   · y       = obras (A+B) sin cubrir en 2080 (huérfanas A + B).
+//   · obrasA  = nº de obras A hoy (tamaño del punto).
+//   · semaforo = situación en 2050 (color).
+// AMBOS cortes del scatter son MEDIANAS dinámicas (Alex, 17-jun): la horizontal
+// sobre «obras sin cubrir 2080» y la VERTICAL sobre «años hasta déficit». El
+// scatter mide urgencia RELATIVA entre provincias, no absoluta: si todas caen
+// después de 2062, un umbral fijo de 25 años no separa nada. Con la mediana, ARU
+// a 36 años queda «antes que la mitad» aunque ninguna sea urgente en absoluto.
+// Los 25 años se conservan solo como REFERENCIA secundaria (REF_X_RIESGO).
+// Cuadrantes: prioritario (pronto+muchas) · planificable (tarde+muchas) ·
+//             vocacion (pronto+pocas) · estable (tarde+pocas).
+export const REF_X_RIESGO = 25;
+const mediana = arr => {
+  const s = arr.slice().sort((a, b) => a - b), n = s.length;
+  return n === 0 ? 0 : (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2);
+};
+export function puntosRiesgo(sheets, provincias, cfg) {
+  const puntos = provincias.map(prov => {
+    const cfgP     = cfgDeProvincia(cfg, prov);
+    const personas = personasDeProvincia(sheets, prov);
+    const obras    = obrasDeProvincia(sheets, prov);
+    const demanda  = demandaDeObras(obras);
+    const m        = metricasProvincia(personas, obras, cfgP);
+    const c2080    = cruceEn(personas, demanda, 2080, cfgP, 1);
+    const c2050    = cruceEn(personas, demanda, 2050, cfgP, 1);
+    return {
+      provincia:  prov,
+      x:          (m.primerDeficitA ?? PROY_FIN) - cfgP.anioBase,
+      añoDeficit: m.primerDeficitA,
+      sinDeficit: m.primerDeficitA == null,
+      y:          Math.round(c2080.huerfanasA + c2080.huerfanasB),
+      obrasA:     demanda.A,
+      semaforo:   c2050.semaforo,
+    };
+  });
+
+  // Cortes dinámicos: mediana de «obras sin cubrir 2080» (horizontal) y de «años
+  // hasta déficit» (vertical, corte principal de urgencia relativa).
+  const medianaY = mediana(puntos.map(p => p.y));
+  const medianaX = mediana(puntos.map(p => p.x));
+
+  for (const p of puntos) {
+    const pronto = p.x < medianaX;        // déficit antes que la mitad de las provincias
+    const muchas = p.y > medianaY;
+    p.cuadrante = pronto ? (muchas ? 'prioritario' : 'vocacion') : (muchas ? 'planificable' : 'estable');
+  }
+
+  return { puntos, medianaX, medianaY, refX: REF_X_RIESGO };
+}

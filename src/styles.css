@@ -1215,6 +1215,52 @@ button { font-family: inherit; cursor: pointer; }
   white-space: nowrap;
 }
 
+/* ── Bloque D.1 — Heatmap de sostenibilidad ── */
+.heat-table thead th { text-align: center; }
+.heat-table thead th.num { cursor: help; }
+.heat-cell {
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* La celda coloreada manda sobre el zebra/hover de la tabla (su fondo es inline). */
+.heat-tend { font-size: 0.8rem; font-weight: 700; white-space: nowrap; }
+.heat-tend.tend-baja { color: var(--alert); }
+.heat-tend.tend-sube { color: var(--ok); }
+.heat-tend.tend-est  { color: var(--gris); }
+
+/* ── Bloque D.2 — Mapa de riesgos (cuadrantes) ── */
+.riesgo-cuadrantes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.rq-card {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--gris);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+}
+.rq-prioritario  { border-left-color: var(--alert); }
+.rq-planificable { border-left-color: var(--warn); }
+.rq-vocacion     { border-left-color: var(--ambar, #E67E22); }
+.rq-estable      { border-left-color: var(--ok); }
+.rq-h { font-weight: 700; font-size: 0.9rem; color: var(--azul); }
+.rq-d { font-size: 0.72rem; color: var(--gris); line-height: 1.42; margin: 3px 0 8px; }
+.rq-provs { display: flex; flex-wrap: wrap; gap: 5px; }
+.rq-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--azul);
+  color: #fff;
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+.rq-empty { font-size: 0.72rem; color: var(--gris); font-style: italic; }
+
 /* Control en vivo de Capacidad de acompañamiento (FAI) */
 .fai-control {
   display: flex;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
+  ScatterChart, Scatter,
 } from 'recharts';
 import { useAppState } from '../state/AppStateContext.jsx';
 import { provinciasDelAlcance } from '../utils/calculations.js';
@@ -9,6 +10,7 @@ import {
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
   primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes, cruceAlcanceEn, metricasPista,
+  sostenibilidadProvincia, puntosRiesgo,
   ANIOS_CURVA, ANIOS_PROGRESION, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -20,6 +22,47 @@ function fmt(n) {
 
 const SEM_COLOR = { verde: 'var(--ok)', amarillo: 'var(--warn)', rojo: 'var(--alert)' };
 const SEM_SIMB  = { verde: '✓', amarillo: '⚠', rojo: '✗' };
+// Para SVG (recharts no resuelve var(--…) en atributos fill) usamos hex de la paleta.
+const SEM_HEX = { verde: COLORS.verde, amarillo: COLORS.ambar, rojo: COLORS.rojoCl };
+
+// Color de la celda del heatmap (Bloque D.1): gradiente continuo rojo(0)→verde(100).
+function colorPuntaje(s) {
+  const v = Math.max(0, Math.min(100, s ?? 0));
+  const hue = (v / 100) * 125;        // 0 = rojo, 125 = verde
+  return `hsl(${hue}, 62%, 42%)`;      // saturado y medio-oscuro → texto blanco legible
+}
+
+// Orden y clave de los 4 cuadrantes del mapa de riesgos (Bloque D.2).
+const QUADRANTS = [
+  { key: 'prioritario' }, { key: 'planificable' }, { key: 'vocacion' }, { key: 'estable' },
+];
+
+// Punto del scatter: radio = √(obras A) con piso y techo (Alex: que las grandes no
+// aplasten a las pequeñas). Color = semáforo 2050. Etiqueta de provincia encima.
+function PuntoRiesgo({ cx, cy, payload }) {
+  if (cx == null || cy == null) return null;
+  const r = Math.min(22, Math.max(5, Math.sqrt(payload.obrasA || 1) * 3.2));
+  const color = SEM_HEX[payload.semaforo] || COLORS.gris;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={color} fillOpacity={0.5} stroke={color} strokeWidth={1.6} />
+      <text x={cx} y={cy - r - 3} textAnchor="middle" fontSize={10} fontWeight={600} fill={COLORS.texto}>{payload.provincia}</text>
+    </g>
+  );
+}
+
+function TooltipRiesgo({ active, payload, t }) {
+  if (!active || !payload || !payload.length) return null;
+  const p = payload[0].payload;
+  return (
+    <div className="tt-card">
+      <div className="tt-title">{p.provincia}</div>
+      <div className="tt-row"><span className="tt-name">{t.pyRiesgoTtX}</span><span className="tt-val">{p.sinDeficit ? t.pyNunca : p.añoDeficit}</span></div>
+      <div className="tt-row"><span className="tt-name">{t.pyRiesgoTtY}</span><span className="tt-val">{p.y}</span></div>
+      <div className="tt-row"><span className="tt-name">{t.pyRiesgoTtSize}</span><span className="tt-val">{p.obrasA}</span></div>
+    </div>
+  );
+}
 
 // Orden de los términos del glosario (claves de t.pyGloss)
 const GLOSARIO = [
@@ -59,6 +102,7 @@ export default function Proyeccion({ t, data }) {
   const ocultarTip = () => setTip(null);
   const thTip = i => ({ onMouseEnter: e => mostrarTip(e, t.pyCobCards[i].d), onMouseLeave: ocultarTip });
   const thTipHor = i => ({ onMouseEnter: e => mostrarTip(e, t.pyHorCols[i].d), onMouseLeave: ocultarTip });
+  const thTipHeat = i => ({ onMouseEnter: e => mostrarTip(e, t.pyHeatCols[i].d), onMouseLeave: ocultarTip });
 
   const calc = useMemo(() => {
     const provs = provinciasDelAlcance(appState);
@@ -133,10 +177,14 @@ export default function Proyeccion({ t, data }) {
       vocaciones: metricasPista(data.sheets, provs, cfgAncla, { ingresos: escenario.ingresosAnuales }),
     };
 
-    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas };
+    // Bloque D: heatmap de sostenibilidad (0–100 por provincia×año) + mapa de riesgos.
+    const sosten = sostenibilidadProvincia(data.sheets, provs, cfg, ANIOS_PROGRESION);
+    const riesgo = puntosRiesgo(data.sheets, provs, cfg);
+
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas, sosten, riesgo };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas, sosten, riesgo } = calc;
 
   // Render de una línea de progresión (6 semáforos por año, comparables entre filas).
   const LineaProgresion = ({ pasos }) => (
@@ -149,6 +197,14 @@ export default function Proyeccion({ t, data }) {
       ))}
     </div>
   );
+
+  // Tendencia del heatmap (Bloque D.1): caída del puntaje 2030→2080. <0 = pierde.
+  const Tendencia = ({ delta }) => {
+    const d = Math.round(delta);
+    const cls = d < -2 ? 'tend-baja' : d > 2 ? 'tend-sube' : 'tend-est';
+    const arrow = d < -2 ? '▼' : d > 2 ? '▲' : '▬';
+    return <span className={'heat-tend ' + cls}>{arrow} {d > 0 ? '+' : ''}{d}</span>;
+  };
 
   // ── Pistas de decisión (Bloque C): MetricaDiff y estrellas ──────────────────
   const añoTxt = v => (v == null ? t.pyMdNoFalta : v);
@@ -638,6 +694,92 @@ export default function Proyeccion({ t, data }) {
               </div>
             </div>
             <p className="panel-nota">{t.pyPistasNota}</p>
+          </section>
+
+          {/* Bloque D.1 — Heatmap de sostenibilidad (0–100 por provincia × año) */}
+          <section className="panel">
+            <h3>{t.pyHeatTitulo} — {scopeLabel}</h3>
+            <p className="panel-sub">{t.pyHeatSub} {t.pyCobAyuda}</p>
+            <div className="table-wrap">
+              <table className="cob-table heat-table">
+                <thead>
+                  <tr>
+                    <th {...thTipHeat(0)}>{t.pyColProvincia}</th>
+                    {ANIOS_PROGRESION.map(Y => (
+                      <th key={Y} className="num" onMouseEnter={e => mostrarTip(e, t.pyHeatAñoAyuda(Y))} onMouseLeave={ocultarTip}>{Y}</th>
+                    ))}
+                    <th className="num" {...thTipHeat(1)}>{t.pyHeatTendencia}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sosten.filas.slice().sort((a, b) => b.personas - a.personas).map(f => (
+                    <tr key={f.provincia}>
+                      <td>{f.provincia}</td>
+                      {ANIOS_PROGRESION.map(Y => (
+                        <td key={Y} className="num heat-cell" style={{ background: colorPuntaje(f.puntajes[Y]) }}>{Math.round(f.puntajes[Y])}</td>
+                      ))}
+                      <td className="num"><Tendencia delta={f.tendencia} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+                {esCpalsj && (
+                  <tfoot>
+                    <tr>
+                      <td>{t.pyHeatPromedio}</td>
+                      {ANIOS_PROGRESION.map(Y => (
+                        <td key={Y} className="num heat-cell" style={{ background: colorPuntaje(sosten.promedio[Y]) }}>{Math.round(sosten.promedio[Y])}</td>
+                      ))}
+                      <td className="num"><Tendencia delta={sosten.tendenciaProm} /></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+            <p className="panel-nota">{t.pyHeatNota}</p>
+          </section>
+
+          {/* Bloque D.2 — Mapa de riesgos (scatter de 4 cuadrantes) */}
+          <section className="panel">
+            <h3>{t.pyRiesgoTitulo} — {scopeLabel}</h3>
+            <p className="panel-sub">{t.pyRiesgoSub}</p>
+            <ResponsiveContainer width="100%" height={360}>
+              <ScatterChart margin={{ top: 16, right: 28, bottom: 28, left: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#EEF2F6" />
+                <XAxis type="number" dataKey="x" name="años" domain={[0, dataMax => Math.max(30, dataMax + 6)]}
+                  tick={{ fontSize: 11, fill: COLORS.gris }}
+                  label={{ value: t.pyRiesgoEjeX, position: 'insideBottom', offset: -12, fontSize: 11, fill: COLORS.gris }} />
+                <YAxis type="number" dataKey="y" name="obras" allowDecimals={false} domain={[0, 'auto']}
+                  tick={{ fontSize: 11, fill: COLORS.gris }}
+                  label={{ value: t.pyRiesgoEjeY, angle: -90, position: 'insideLeft', fontSize: 11, fill: COLORS.gris, style: { textAnchor: 'middle' } }} />
+                {/* Referencia secundaria: el umbral fijo de 25 años (gris claro, punteado). */}
+                <ReferenceLine x={riesgo.refX} stroke={COLORS.borde} strokeDasharray="2 4"
+                  label={{ value: t.pyRiesgoRef25, position: 'insideBottomLeft', fontSize: 10, fill: COLORS.gris }} />
+                {/* Corte principal: mediana de años hasta déficit (urgencia relativa). */}
+                <ReferenceLine x={riesgo.medianaX} stroke={COLORS.azul} strokeDasharray="5 4"
+                  label={{ value: t.pyRiesgoRefX(Math.round(riesgo.medianaX)), position: 'insideTopLeft', fontSize: 11, fill: COLORS.azul }} />
+                <ReferenceLine y={riesgo.medianaY} stroke={COLORS.azul} strokeDasharray="5 4"
+                  label={{ value: t.pyRiesgoRefY(Math.round(riesgo.medianaY)), position: 'insideBottomRight', fontSize: 11, fill: COLORS.azul }} />
+                <Tooltip content={<TooltipRiesgo t={t} />} cursor={{ strokeDasharray: '3 3' }} />
+                <Scatter data={riesgo.puntos} shape={<PuntoRiesgo />} isAnimationActive={false} />
+              </ScatterChart>
+            </ResponsiveContainer>
+            <div className="riesgo-cuadrantes">
+              {QUADRANTS.map(q => {
+                const provs = riesgo.puntos.filter(p => p.cuadrante === q.key);
+                return (
+                  <div key={q.key} className={'rq-card rq-' + q.key}>
+                    <div className="rq-h">{t.pyRiesgoCuad[q.key].t}</div>
+                    <div className="rq-d">{t.pyRiesgoCuad[q.key].d}</div>
+                    <div className="rq-provs">
+                      {provs.length
+                        ? provs.map(p => <span key={p.provincia} className="rq-chip">{p.provincia}</span>)
+                        : <span className="rq-empty">{t.pyRiesgoVacio}</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="panel-nota">{t.pyRiesgoNota}</p>
           </section>
 
         </div>
