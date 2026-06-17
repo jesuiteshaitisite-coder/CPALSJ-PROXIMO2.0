@@ -93,7 +93,7 @@ export default function Proyeccion({ t, data }) {
   const { alcance, provincia, haitiActivo, escenario, setEscenario } = appState;
   const [gloss, setGloss] = useState('activa');
   const [tip, setTip] = useState(null); // pop de ayuda de las columnas de Cobertura
-  const [informe, setInforme] = useState(null); // §6.9: JSON del informe (null = vista normal)
+  const [mostrarInforme, setMostrarInforme] = useState(false); // §6.9: ¿vista informe?
 
   // Pop flotante (posición fija → no lo recorta el scroll de la tabla). Se centra
   // bajo el encabezado y se acota a la pantalla para no salirse por los bordes.
@@ -309,19 +309,24 @@ export default function Proyeccion({ t, data }) {
   const escTag = ingActual > 0 ? t.pyEscCon(ingActual) : t.pyEscSiNadie;
   const kSostiene = Kalcance != null && ingActual >= Kalcance;
 
-  // §6.9 — Genera el JSON del informe (cuerpo anclado, sin sliders) y abre la vista.
-  const generarInforme = () => {
-    setInforme(construirInforme(data.sheets, data.params, appState, { idioma: appState.idioma || 'es', cargadoEn: data.cargadoEn }));
-  };
+  // §6.9 — El informe se RECONSTRUYE con el alcance/idioma/escenario actuales (no es
+  // un snapshot congelado): si cambias de provincia con el informe abierto, se
+  // regenera para esa provincia. El cuerpo sigue anclado en «si nadie entra».
+  const informe = useMemo(
+    () => (mostrarInforme
+      ? construirInforme(data.sheets, data.params, appState, { idioma: appState.idioma || 'es', cargadoEn: data.cargadoEn })
+      : null),
+    [mostrarInforme, data, alcance, provincia, haitiActivo, escenario, appState.idioma] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   // Vista del informe: reemplaza los bloques por el documento de gobierno (§6.9).
-  if (informe) return <Informe informe={informe} t={t} onVolver={() => setInforme(null)} />;
+  if (mostrarInforme && informe) return <Informe informe={informe} t={t} onVolver={() => setMostrarInforme(false)} />;
 
   return (
     <div className="vista">
       <div className="vista-general">
         <div className="inf-generar-bar no-print">
-          <button className="inf-generar-btn" onClick={generarInforme}>📄 {t.infGenerar}</button>
+          <button className="inf-generar-btn" onClick={() => setMostrarInforme(true)}>📄 {t.infGenerar}</button>
         </div>
 
         {/* Hero panel */}

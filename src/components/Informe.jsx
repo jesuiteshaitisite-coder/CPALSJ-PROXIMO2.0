@@ -22,12 +22,14 @@ const colorPuntaje = s => `hsl(${Math.max(0, Math.min(100, s ?? 0)) / 100 * 125}
 
 const QUAD_KEYS = ['prioritario', 'planificable', 'vocacion', 'estable'];
 
-// Divide un canvas alto en páginas A4 sucesivas.
-function addCanvasToPages(doc, canvas, margin, usableW, pageH) {
-  const ratio = usableW / canvas.width;
+const PDF_GAP = 12; // separación vertical entre secciones empaquetadas (pt)
+
+// Trocea una sección MÁS ALTA que una página en cortes A4 sucesivos. Devuelve la
+// y final (tras el último corte) para que la siguiente sección pueda continuar.
+function addCanvasSliced(doc, canvas, margin, usableW, pageH, ratio) {
   const pageContentH = pageH - margin * 2;
   const sliceHpx = Math.max(1, Math.floor(pageContentH / ratio));
-  let sy = 0, first = true;
+  let sy = 0, first = true, endY = margin;
   while (sy < canvas.height) {
     const hpx = Math.min(sliceHpx, canvas.height - sy);
     const tmp = document.createElement('canvas');
@@ -38,8 +40,10 @@ function addCanvasToPages(doc, canvas, margin, usableW, pageH) {
     if (!first) doc.addPage();
     // JPEG (no PNG): el fondo es blanco opaco, así el PDF pesa ~20× menos.
     doc.addImage(tmp.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, usableW, hpx * ratio);
+    endY = margin + hpx * ratio + PDF_GAP;
     sy += hpx; first = false;
   }
+  return endY;
 }
 
 export default function Informe({ informe, t, onVolver }) {
@@ -90,11 +94,25 @@ export default function Informe({ informe, t, onVolver }) {
       }
       setProgreso(25);
 
+      // Flujo COMPACTO: empaqueta varias secciones por página y solo abre página
+      // nueva cuando la siguiente no cabe (o trocea las que superan una página).
+      // La portada (i=0) va sola; el cuerpo empieza en página nueva tras ella.
       const secs = [...docRef.current.querySelectorAll('[data-sec]')];
+      const pageContentH = pageH - margin * 2;
+      let y = margin;
       for (let i = 0; i < secs.length; i++) {
-        if (i > 0) doc.addPage();
         const canvas = await h2c(secs[i], { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
-        addCanvasToPages(doc, canvas, margin, usableW, pageH);
+        const ratio = usableW / canvas.width;
+        const imgH = canvas.height * ratio;
+        if (i === 1) { doc.addPage(); y = margin; } // cuerpo en página nueva tras la portada
+        if (imgH <= pageContentH) {
+          if (i > 0 && y + imgH > pageH - margin) { doc.addPage(); y = margin; }
+          doc.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, y, usableW, imgH);
+          y += imgH + PDF_GAP;
+        } else {
+          if (y > margin) { doc.addPage(); y = margin; } // secciones altas empiezan limpias
+          y = addCanvasSliced(doc, canvas, margin, usableW, pageH, ratio);
+        }
         setProgreso(25 + Math.round(((i + 1) / secs.length) * 65));
       }
 
