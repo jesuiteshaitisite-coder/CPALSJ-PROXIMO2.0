@@ -802,6 +802,8 @@ button { font-family: inherit; cursor: pointer; }
 }
 .hero-stat-esc.is-ok { color: #7EE2A8; }
 .hero-stat-esc.is-no { color: #F0A6A0; }
+/* Subetiqueta de la primera provincia en déficit (bajo el KPI de déficit A) */
+.hero-stat-prov { font-size: 0.58rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
 
 /* ── KPI strip (semántica de color) ── */
 
@@ -1145,6 +1147,67 @@ button { font-family: inherit; cursor: pointer; }
 .cob-prog .prog-yr { font-size: 0.52rem; color: var(--gris); }
 /* En el pie (TOTAL CPALSJ, fondo oscuro) el año se aclara para que se lea. */
 .table-wrap tfoot .cob-prog .prog-yr { color: rgba(255,255,255,0.6); }
+
+/* ── Pistas de decisión (Bloque C) ── */
+.pista-base {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  background: var(--azul);
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.pista-base .pb-lbl { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.85); margin-right: 4px; }
+.pista-base .pb-pill {
+  display: inline-flex;
+  flex-direction: column;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.pista-base .pb-k { font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: rgba(255,255,255,0.55); }
+.pista-base .pb-sub { font-size: 0.54rem; font-weight: 400; color: rgba(255,255,255,0.45); margin-top: 1px; }
+
+.pista-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.pista-card {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 13px 14px;
+  background: #fff;
+}
+.pista-card .pista-h { font-weight: 700; color: var(--azul); font-size: 0.95rem; }
+.pista-card .pista-d { font-size: 0.76rem; color: var(--gris); line-height: 1.45; margin: 4px 0 10px; }
+.pista-ctl { display: block; font-size: 0.8rem; color: var(--texto); margin-bottom: 8px; }
+.pista-ctl input[type="range"] { width: 100%; accent-color: var(--azul-medio); margin-top: 3px; }
+
+.pista-diffs { border-top: 1px solid var(--borde); padding-top: 8px; }
+.md-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 4px 8px; padding: 2px 0; }
+.md-label { font-size: 0.74rem; color: var(--texto); }
+.md-vals { font-size: 0.78rem; color: var(--gris); font-variant-numeric: tabular-nums; }
+.md-vals strong { color: var(--azul); }
+.md-delta { grid-column: 1 / -1; font-size: 0.72rem; font-weight: 600; }
+.md-delta.md-mejor { color: var(--ok); }
+.md-delta.md-peor { color: var(--alert); }
+.md-delta.md-igual { color: var(--gris); font-weight: 400; }
+
+.pista-timing { font-size: 0.74rem; font-weight: 600; margin: 8px 0 0; padding: 6px 8px; border-radius: 6px; line-height: 1.4; }
+.pista-timing.is-ok { color: var(--ok); background: #EAF7EF; }
+.pista-timing.is-late { color: var(--warn); background: #FFF7EC; }
+
+.pista-stars { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.pista-star { font-size: 0.68rem; color: var(--gris); }
+.pista-star .ps-lbl { margin-right: 4px; }
+.pista-star .ps-stars { color: var(--acento); letter-spacing: 1px; }
+.pista-star .ps-empty { color: var(--borde); }
 
 .sem-badge {
   font-weight: 700;

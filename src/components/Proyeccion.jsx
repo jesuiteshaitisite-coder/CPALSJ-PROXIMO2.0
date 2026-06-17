@@ -8,7 +8,7 @@ import {
   resolverCfg, proyectarPorProvincia, curvaEscenarios, curvaNucleoB, serieTSsinRep,
   chequearDiscrepancia, cohortesActivas, tablaEscenarios, semaforoCruce,
   sumaPersev, perseveranciaPonderadaDe10, persevDe10DeProvincia,
-  primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes, cruceAlcanceEn,
+  primerDeficitASim, fuerzaActivaSimEn, tablaHorizontes, cruceAlcanceEn, metricasPista,
   ANIOS_CURVA, ANIOS_PROGRESION, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
@@ -92,6 +92,11 @@ export default function Proyeccion({ t, data }) {
     // Primer déficit A más cercano del alcance (ANCLA «si nadie entra», para la narrativa)
     const deficits = tabla.map(r => r.primerDeficitA).filter(Boolean);
     const primerDeficit = deficits.length ? Math.min(...deficits) : null;
+    // Provincia que entra primero en déficit A (para la subetiqueta del hero).
+    const conDef = tabla.filter(r => r.primerDeficitA != null);
+    const provDeficit = conDef.length
+      ? conDef.reduce((a, b) => (b.primerDeficitA < a.primerDeficitA ? b : a)).provincia : null;
+    const nProv = provs.length;
 
     // KPIs proyectivos REACTIVOS al slider de ingresos (con reposición simulada)
     const primerDeficitSim = primerDeficitASim(data.sheets, provs, cfg);
@@ -117,10 +122,21 @@ export default function Proyeccion({ t, data }) {
     // Línea de progresión agregada (fila TOTAL CPALSJ de la tabla de Cobertura).
     const lineaTotalSem = ANIOS_PROGRESION.map(Y => ({ año: Y, sem: cruceAlcanceEn(data.sheets, provs, cfg, Y).semaforo }));
 
-    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem };
+    // Pistas de decisión (Bloque C): ancla "si nadie entra" + cada palanca aislada.
+    const cfgAncla = { ...cfg, ingresosAnuales: 0 };
+    const pistaBase = metricasPista(data.sheets, provs, cfgAncla, {});
+    const pistas = {
+      base: pistaBase,
+      cerrar:     metricasPista(data.sheets, provs, cfgAncla, { cerrarA: escenario.cerrarA }),
+      soltar:     metricasPista(data.sheets, provs, cfgAncla, { pctBtoC: escenario.pctBtoC }),
+      refuerzo:   metricasPista(data.sheets, provs, cfgAncla, { extraPool: escenario.extraPool, añoDesde: escenario.añoDesde }),
+      vocaciones: metricasPista(data.sheets, provs, cfgAncla, { ingresos: escenario.ingresosAnuales }),
+    };
+
+    return { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas };
   }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem } = calc;
+  const { cfg, tabla, curvaConTS, discrepancia, nucleo, tot, primerDeficit, provDeficit, nProv, primerDeficitSim, fuerza2080Sim, base2100, Kalcance, esc, persevPond, horizontes, lineaTotalSem, pistas } = calc;
 
   // Render de una línea de progresión (6 semáforos por año, comparables entre filas).
   const LineaProgresion = ({ pasos }) => (
@@ -133,6 +149,43 @@ export default function Proyeccion({ t, data }) {
       ))}
     </div>
   );
+
+  // ── Pistas de decisión (Bloque C): MetricaDiff y estrellas ──────────────────
+  const añoTxt = v => (v == null ? t.pyMdNoFalta : v);
+  // Una métrica comparada: base → ahora, con delta coloreado. kind 'año' (más=mejor) u 'obras' (menos=mejor).
+  const MDiff = ({ label, base, ahora, kind }) => {
+    let estado = 'igual', detalle = t.pyMdSinCambio;
+    if (kind === 'año') {
+      const b = base ?? PROY_FIN + 1, a = ahora ?? PROY_FIN + 1;
+      if (a > b) { estado = 'mejor'; detalle = ahora == null ? t.pyMdPosterga : t.pyMdMasMargen(a - b); }
+      else if (a < b) { estado = 'peor'; detalle = t.pyMdMenosMargen(b - a); }
+    } else {
+      if (ahora < base) { estado = 'mejor'; detalle = t.pyMdMasCubiertas(base - ahora); }
+      else if (ahora > base) { estado = 'peor'; detalle = t.pyMdMenosCubiertas(ahora - base); }
+    }
+    return (
+      <div className="md-row">
+        <span className="md-label">{label}</span>
+        <span className="md-vals">{kind === 'año' ? añoTxt(base) : fmt(base)} → <strong>{kind === 'año' ? añoTxt(ahora) : fmt(ahora)}</strong></span>
+        <span className={'md-delta md-' + estado}>{detalle}</span>
+      </div>
+    );
+  };
+  const PistaDiffs = ({ p }) => (
+    <div className="pista-diffs">
+      <MDiff label={t.pyMdFaltaA} base={pistas.base.faltaA} ahora={p.faltaA} kind="año" />
+      <MDiff label={t.pyMdFaltaB} base={pistas.base.faltaB} ahora={p.faltaB} kind="año" />
+      <MDiff label={t.pyMdSin2080} base={pistas.base.sinJesuita2080} ahora={p.sinJesuita2080} kind="obras" />
+    </div>
+  );
+  const Estrellas = ({ label, n }) => (
+    <span className="pista-star"><span className="ps-lbl">{label}</span>
+      <span className="ps-stars">{'★'.repeat(n)}<span className="ps-empty">{'★'.repeat(5 - n)}</span></span></span>
+  );
+  // ¿El refuerzo externo llega a tiempo respecto al umbral crítico de A?
+  const refuerzoUmbral = pistas.base.faltaA;
+  const refuerzoATiempo = escenario.extraPool > 0 && refuerzoUmbral != null
+    ? escenario.añoDesde <= refuerzoUmbral : null;
 
   // Control interno de calidad de datos (solo en modo desarrollo, NO en el
   // dashboard): permite al equipo cotejar la curva calculada desde PERSONAS
@@ -172,9 +225,15 @@ export default function Proyeccion({ t, data }) {
   const setIngresos = v => setEscenario({ ...escenario, ingresosAnuales: Number(v) });
   const setFai = v => setEscenario({ ...escenario, fai: Number(v) });
   const setPersevProv = v => setEscenario({ ...escenario, persevOverride: { provincia, de10: Number(v) } });
-  const restablecer = () => setEscenario({ ...escenario, ingresosAnuales: baseIngresos, fai: baseFai, persevOverride: null });
+  // Palancas de las pistas de decisión (Bloque C)
+  const setLever = (k, v) => setEscenario({ ...escenario, [k]: Number(v) });
+  const restablecer = () => setEscenario({
+    ...escenario, ingresosAnuales: baseIngresos, fai: baseFai, persevOverride: null,
+    cerrarA: 0, pctBtoC: 0, extraPool: 0, añoDesde: 2030,
+  });
   // ¿Hay algo simulado fuera de los valores de la hoja?
-  const haySimulacion = escenario.ingresosAnuales !== baseIngresos || escenario.fai !== baseFai || !!escenario.persevOverride;
+  const haySimulacion = escenario.ingresosAnuales !== baseIngresos || escenario.fai !== baseFai
+    || !!escenario.persevOverride || escenario.cerrarA > 0 || escenario.pctBtoC > 0 || escenario.extraPool > 0;
 
   // Etiqueta de escenario para los KPIs proyectivos (hablan el idioma del slider).
   const ingActual = escenario.ingresosAnuales;
@@ -206,6 +265,7 @@ export default function Proyeccion({ t, data }) {
               <div className="hero-stat-num">{primerDeficitSim ?? '> 2100'}</div>
               <div className="hero-stat-lbl">{t.pyMiniDeficit}</div>
               <div className="hero-stat-esc">{escTag}</div>
+              {esCpalsj && provDeficit && <div className="hero-stat-prov">{t.pyHeroPrimeraProv(provDeficit)}</div>}
             </div>
             <div className="hero-stat">
               <div className="hero-stat-num">{fmt(tot.demandaA)}</div>
@@ -513,6 +573,71 @@ export default function Proyeccion({ t, data }) {
             <p className="panel-nota">{t.pyBFrase(fraseScope, tot.demandaB, Math.round(tot.nucleoBHoy), nucleo.cruces[0])}</p>
             <p className="panel-nota">{t.pyObrasCNota(tot.demandaC)}</p>
             <p className="panel-nota">{t.pyNotaPie}</p>
+          </section>
+
+          {/* Pistas de decisión (Fase 7 · Bloque C) */}
+          <section className="panel">
+            <h3>{t.pyPistasTitulo} — {scopeLabel}</h3>
+            <p className="panel-sub">{t.pyPistasSub}</p>
+
+            {/* Fila-resumen base (ancla "si nadie entra") */}
+            <div className="pista-base">
+              <span className="pb-lbl">{t.pyPistasBaseLbl}</span>
+              <span className="pb-pill">{añoTxt(pistas.base.faltaA)}<span className="pb-k">{t.pyPbFaltaA}</span><span className="pb-sub">{t.pyPbConjuntoSub(nProv)}</span></span>
+              <span className="pb-pill">{añoTxt(pistas.base.faltaB)}<span className="pb-k">{t.pyPbFaltaB}</span></span>
+              <span className="pb-pill">{fmt(pistas.base.sinJesuita2050)}<span className="pb-k">{t.pyPbSin2050}</span></span>
+              <span className="pb-pill">{fmt(pistas.base.sinJesuita2080)}<span className="pb-k">{t.pyPbSin2080}</span></span>
+            </div>
+
+            <div className="pista-grid">
+              {/* ① Cerrar obras A */}
+              <div className="pista-card">
+                <div className="pista-h">{t.pyP1Titulo}</div>
+                <p className="pista-d">{t.pyP1Desc}</p>
+                <label className="pista-ctl">{t.pyP1Slider(escenario.cerrarA)}
+                  <input type="range" min="0" max={pistas.base.demandaA} step="1" value={escenario.cerrarA} onChange={e => setLever('cerrarA', e.target.value)} /></label>
+                <PistaDiffs p={pistas.cerrar} />
+                <div className="pista-stars"><Estrellas label={t.pyPsImpacto} n={3} /><Estrellas label={t.pyPsRiesgo} n={4} /><Estrellas label={t.pyPsViabilidad} n={2} /></div>
+              </div>
+
+              {/* ② Soltar a manos laicas */}
+              <div className="pista-card">
+                <div className="pista-h">{t.pyP2Titulo}</div>
+                <p className="pista-d">{t.pyP2Desc}</p>
+                <label className="pista-ctl">{t.pyP2Slider(escenario.pctBtoC)}
+                  <input type="range" min="0" max="80" step="5" value={escenario.pctBtoC} onChange={e => setLever('pctBtoC', e.target.value)} /></label>
+                <PistaDiffs p={pistas.soltar} />
+                <div className="pista-stars"><Estrellas label={t.pyPsImpacto} n={2} /><Estrellas label={t.pyPsRiesgo} n={2} /><Estrellas label={t.pyPsViabilidad} n={4} /></div>
+              </div>
+
+              {/* ③ Refuerzo externo */}
+              <div className="pista-card">
+                <div className="pista-h">{t.pyP3Titulo}</div>
+                <p className="pista-d">{t.pyP3Desc}</p>
+                <label className="pista-ctl">{t.pyP3SliderN(escenario.extraPool)}
+                  <input type="range" min="0" max="10" step="1" value={escenario.extraPool} onChange={e => setLever('extraPool', e.target.value)} /></label>
+                <label className="pista-ctl">{t.pyP3SliderAño(escenario.añoDesde)}
+                  <input type="range" min="2026" max="2080" step="1" value={escenario.añoDesde} onChange={e => setLever('añoDesde', e.target.value)} /></label>
+                <PistaDiffs p={pistas.refuerzo} />
+                {refuerzoATiempo !== null && (
+                  <p className={'pista-timing ' + (refuerzoATiempo ? 'is-ok' : 'is-late')}>
+                    {refuerzoATiempo ? t.pyP3ATiempo(refuerzoUmbral) : t.pyP3Tarde(refuerzoUmbral)}
+                  </p>
+                )}
+                <div className="pista-stars"><Estrellas label={t.pyPsImpacto} n={2} /><Estrellas label={t.pyPsRiesgo} n={1} /><Estrellas label={t.pyPsViabilidad} n={2} /></div>
+              </div>
+
+              {/* ④ Más vocaciones (unificada con el slider de ingresos del panel) */}
+              <div className="pista-card">
+                <div className="pista-h">{t.pyP4Titulo}</div>
+                <p className="pista-d">{t.pyP4Desc}</p>
+                <label className="pista-ctl">{t.pyP4Slider(escenario.ingresosAnuales)}
+                  <input type="range" min="0" max="5" step="1" value={escenario.ingresosAnuales} onChange={e => setIngresos(e.target.value)} /></label>
+                <PistaDiffs p={pistas.vocaciones} />
+                <div className="pista-stars"><Estrellas label={t.pyPsImpacto} n={5} /><Estrellas label={t.pyPsRiesgo} n={1} /><Estrellas label={t.pyPsViabilidad} n={2} /></div>
+              </div>
+            </div>
+            <p className="panel-nota">{t.pyPistasNota}</p>
           </section>
 
         </div>

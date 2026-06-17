@@ -410,6 +410,58 @@ export function tablaHorizontes(sheets, provincias, cfg, años) {
   return años.map(Y => cruceAlcanceEn(sheets, provincias, cfg, Y));
 }
 
+// ── Pistas de decisión (Bloque C): métricas AGREGADAS bajo una palanca ────────
+// Visión de CONJUNTO del alcance (pool agregado, no por provincia — simplificación
+// acordada para esta fase). Cada palanca se aplica AISLADA sobre el ancla:
+//   · cerrarA   → cierra N obras A (baja la demanda A y libera jesuitas para B).
+//   · pctBtoC   → convierte X% de obras B a Tipo C (baja la demanda B).
+//   · extraPool → pulso único de N jesuitas externos desde `añoDesde` (~55 años).
+//   · ingresos  → vocaciones nuevas/año sostenidas (la misma palanca del panel A).
+// Devuelve: año en que falta A, año en que ya no se acompañan todas las B, y las
+// obras sin jesuita (A+B) en 2050 y 2080.
+export function metricasPista(sheets, provincias, cfg, palancas = {}) {
+  const cerrarA   = palancas.cerrarA   ?? 0;
+  const pctBtoC   = palancas.pctBtoC   ?? 0;
+  const extraPool = palancas.extraPool ?? 0;
+  const añoDesde  = palancas.añoDesde  ?? 2030;
+  const ingresos  = palancas.ingresos  ?? 0;
+
+  const cfgK = { ...cfg, ingresosAnuales: ingresos };
+  const datos = provincias.map(prov => ({
+    cfgP: cfgDeProvincia(cfgK, prov),
+    personas: personasDeProvincia(sheets, prov),
+    demanda: demandaDeObras(obrasDeProvincia(sheets, prov)),
+  }));
+  const demandaA = datos.reduce((s, d) => s + d.demanda.A, 0);
+  const demandaB = datos.reduce((s, d) => s + d.demanda.B, 0);
+  const demandaAef = Math.max(0, demandaA - cerrarA);
+  const demandaBef = demandaB * (1 - pctBtoC / 100);
+
+  // Pulso externo: N jesuitas activos desde añoDesde, durante ~55 años.
+  const pulso = Y => (extraPool > 0 && Y >= añoDesde && Y - añoDesde < (cfg.salida - 30)) ? extraPool : 0;
+  const activosEn = Y => datos.reduce((s, d) => s + fuerzaActivaEn(d.personas, Y, d.cfgP) + reposicionEn(Y, d.cfgP, 1), 0) + pulso(Y);
+  const poolEn    = Y => datos.reduce((s, d) => s + poolABaseEn(d.personas, Y, d.cfgP) + reposicionEn(Y, d.cfgP, 1), 0) + pulso(Y);
+
+  const huerfanasEn = Y => {
+    const poolA = poolEn(Y), activos = activosEn(Y);
+    const hA = Math.max(0, demandaAef - poolA);
+    const libres = Math.max(0, activos - Math.min(poolA, demandaAef));
+    const hB = Math.max(0, demandaBef - libres * cfg.fai);
+    return Math.round(hA + hB);
+  };
+
+  let faltaA = null, faltaB = null;
+  for (let Y = cfg.anioBase; Y <= PROY_FIN; Y++) {
+    if (faltaA === null && poolEn(Y) < demandaAef) faltaA = Y;
+    if (faltaB === null) {
+      const libres = Math.max(0, activosEn(Y) - Math.min(poolEn(Y), demandaAef));
+      if (libres * cfg.fai < demandaBef) faltaB = Y;
+    }
+    if (faltaA !== null && faltaB !== null) break;
+  }
+  return { faltaA, faltaB, sinJesuita2050: huerfanasEn(2050), sinJesuita2080: huerfanasEn(2080), demandaA };
+}
+
 // ── Curva de escenarios para el gráfico (agrega un conjunto de provincias) ────
 // tasas = lista de ingresos/año a graficar (p.ej. [0,1,3]). En CPALSJ la tasa
 // es POR provincia, así que la reposición se multiplica por nº de provincias.
