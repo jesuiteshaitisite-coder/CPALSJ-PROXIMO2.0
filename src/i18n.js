@@ -10,6 +10,8 @@ export const TEXTS = {
     accesoPlaceholder: 'Clave de sesión',
     accesoBoton: 'Entrar',
     accesoError: 'Clave incorrecta. Inténtalo de nuevo.',
+    accesoMostrar: 'Mostrar la clave',
+    accesoOcultar: 'Ocultar la clave',
     // Header
     alcance: 'Alcance',
     cpalsjCompleta: 'CPALSJ completa',
@@ -400,6 +402,8 @@ export const TEXTS = {
     accesoPlaceholder: 'Chave de sessão',
     accesoBoton: 'Entrar',
     accesoError: 'Chave incorreta. Tente novamente.',
+    accesoMostrar: 'Mostrar a chave',
+    accesoOcultar: 'Ocultar a chave',
     alcance: 'Escopo',
     cpalsjCompleta: 'CPALSJ completa',
     incluirHaiti: 'Incluir Haiti',

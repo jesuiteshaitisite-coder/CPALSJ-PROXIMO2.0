@@ -10,6 +10,7 @@ export default function Login({ t, onAccess }) {
   const [clave, setClave] = useState('');
   const [error, setError] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [mostrar, setMostrar] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
@@ -31,13 +32,24 @@ export default function Login({ t, onAccess }) {
         <div className="login-logo">CPALSJ <span>PRÓXIMO</span></div>
         <h1>{t.accesoTitulo}</h1>
         <p>{t.accesoTexto}</p>
-        <input
-          type="password"
-          placeholder={t.accesoPlaceholder}
-          value={clave}
-          autoFocus
-          onChange={e => { setClave(e.target.value); setError(false); }}
-        />
+        <div className="login-pass">
+          <input
+            type={mostrar ? 'text' : 'password'}
+            placeholder={t.accesoPlaceholder}
+            value={clave}
+            autoFocus
+            onChange={e => { setClave(e.target.value); setError(false); }}
+          />
+          <button
+            type="button"
+            className="login-pass-toggle"
+            onClick={() => setMostrar(m => !m)}
+            aria-label={mostrar ? t.accesoOcultar : t.accesoMostrar}
+            title={mostrar ? t.accesoOcultar : t.accesoMostrar}
+          >
+            {mostrar ? '🙈' : '👁'}
+          </button>
+        </div>
         {error && <div className="login-error">{t.accesoError}</div>}
         <button type="submit" disabled={!clave || checking}>{t.accesoBoton}</button>
       </form>

@@ -93,6 +93,26 @@ button { font-family: inherit; cursor: pointer; }
 .login-card button:hover:not(:disabled) { background: var(--azul-medio); }
 .login-card button:disabled { opacity: 0.5; cursor: default; }
 
+/* Campo de clave con botón de mostrar/ocultar */
+.login-pass { position: relative; display: block; }
+.login-pass input { width: 100%; box-sizing: border-box; padding-right: 46px; }
+.login-card .login-pass-toggle {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  color: var(--gris);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 400;
+  cursor: pointer;
+}
+.login-card .login-pass-toggle:hover:not(:disabled) { background: #F0F3F7; }
+
 .login-error {
   background: #FEF2F2;
   color: var(--rojo);
