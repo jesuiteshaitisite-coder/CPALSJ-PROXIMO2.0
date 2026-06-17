@@ -14,6 +14,8 @@ import {
   ANIOS_CURVA, ANIOS_PROGRESION, PROY_FIN,
 } from '../utils/motor.js';
 import { COLORS } from '../utils/colors.js';
+import { construirInforme } from '../utils/informe.js';
+import Informe from './Informe.jsx';
 
 function fmt(n) {
   if (n === null || n === undefined) return '—';
@@ -91,6 +93,7 @@ export default function Proyeccion({ t, data }) {
   const { alcance, provincia, haitiActivo, escenario, setEscenario } = appState;
   const [gloss, setGloss] = useState('activa');
   const [tip, setTip] = useState(null); // pop de ayuda de las columnas de Cobertura
+  const [informe, setInforme] = useState(null); // §6.9: JSON del informe (null = vista normal)
 
   // Pop flotante (posición fija → no lo recorta el scroll de la tabla). Se centra
   // bajo el encabezado y se acota a la pantalla para no salirse por los bordes.
@@ -263,6 +266,16 @@ export default function Proyeccion({ t, data }) {
     console.groupEnd();
   }, [curvaConTS, discrepancia, alcance, provincia, persevPond, tabla]);
 
+  // DEV: expone el JSON del Informe (§6.9) para inspección aislada antes de la
+  // vista y el PDF. Solo en desarrollo; nunca en producción.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    try {
+      window.__informe = construirInforme(data.sheets, data.params, appState, { idioma: appState.idioma || 'es', cargadoEn: data.cargadoEn });
+      console.info('[CPALSJ] window.__informe listo (', window.__informe.meta.scopeLabel, ')');
+    } catch (e) { console.error('[CPALSJ] construirInforme falló:', e); }
+  }, [data, alcance, provincia, haitiActivo, escenario]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const esCpalsj = alcance === 'cpalsj';
   const heroSub = esCpalsj ? t.pyHeroSub : provincia;
   const scopeLabel = esCpalsj ? 'CPALSJ' : provincia;
@@ -296,9 +309,20 @@ export default function Proyeccion({ t, data }) {
   const escTag = ingActual > 0 ? t.pyEscCon(ingActual) : t.pyEscSiNadie;
   const kSostiene = Kalcance != null && ingActual >= Kalcance;
 
+  // §6.9 — Genera el JSON del informe (cuerpo anclado, sin sliders) y abre la vista.
+  const generarInforme = () => {
+    setInforme(construirInforme(data.sheets, data.params, appState, { idioma: appState.idioma || 'es', cargadoEn: data.cargadoEn }));
+  };
+
+  // Vista del informe: reemplaza los bloques por el documento de gobierno (§6.9).
+  if (informe) return <Informe informe={informe} t={t} onVolver={() => setInforme(null)} />;
+
   return (
     <div className="vista">
       <div className="vista-general">
+        <div className="inf-generar-bar no-print">
+          <button className="inf-generar-btn" onClick={generarInforme}>📄 {t.infGenerar}</button>
+        </div>
 
         {/* Hero panel */}
         <aside className="hero-panel">

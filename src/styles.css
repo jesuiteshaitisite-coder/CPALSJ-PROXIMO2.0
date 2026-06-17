@@ -1261,6 +1261,126 @@ button { font-family: inherit; cursor: pointer; }
 }
 .rq-empty { font-size: 0.72rem; color: var(--gris); font-style: italic; }
 
+/* ── §6.9 Informe estructurado + PDF ── */
+.inf-generar-bar { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+.inf-generar-btn {
+  background: var(--azul); color: #fff; border: none; border-radius: 8px;
+  padding: 8px 16px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.inf-generar-btn:hover { background: var(--azul-medio); }
+
+.informe-wrap { display: flex; flex-direction: column; gap: 14px; }
+.informe-toolbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--borde); border-radius: 10px;
+  padding: 10px 12px; box-shadow: 0 2px 10px rgba(15,35,65,0.06);
+}
+.informe-toolbar button {
+  background: #fff; border: 1px solid var(--borde); border-radius: 7px;
+  padding: 7px 13px; font-size: 0.82rem; font-weight: 600; color: var(--texto); cursor: pointer;
+}
+.informe-toolbar button:hover { background: #F4F7FA; }
+.informe-toolbar .inf-tb-primary { background: var(--azul); color: #fff; border-color: var(--azul); }
+.informe-toolbar .inf-tb-primary:hover { background: var(--azul-medio); }
+.informe-toolbar .inf-tb-primary:disabled { opacity: 0.7; cursor: default; }
+.informe-toolbar .inf-tb-spacer { flex: 1; }
+.inf-prog { flex-basis: 100%; height: 4px; background: var(--borde); border-radius: 3px; overflow: hidden; }
+.inf-prog-bar { display: block; height: 100%; background: var(--acento); transition: width 0.2s ease; }
+
+/* El documento: una pila de "páginas" blancas */
+.informe-doc { display: flex; flex-direction: column; gap: 16px; }
+.inf-sec {
+  background: #fff; border: 1px solid var(--borde); border-radius: 10px;
+  padding: 26px 30px; color: var(--texto);
+}
+.inf-h1 { font-size: 1.6rem; color: var(--azul); margin: 4px 0 2px; }
+.inf-h2 { font-size: 1.15rem; color: var(--azul); margin: 0 0 12px; border-bottom: 2px solid var(--acento); padding-bottom: 6px; }
+.inf-h3 { font-size: 0.9rem; color: var(--azul-medio); margin: 16px 0 7px; }
+.inf-nota { font-size: 0.78rem; color: var(--gris); line-height: 1.5; margin: 10px 0 0; }
+.inf-mini { font-size: 0.72rem; color: var(--gris); margin: 6px 0 0; }
+
+/* Portada */
+.inf-portada { text-align: center; padding: 60px 30px; }
+.inf-portada .inf-marca { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; color: var(--acento); }
+.inf-sub { font-size: 0.95rem; color: var(--gris); margin: 0 0 22px; }
+.inf-portada-scope { display: inline-flex; flex-direction: column; gap: 2px; margin: 8px 0; }
+.inf-portada-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gris); }
+.inf-portada-val { font-size: 1.3rem; font-weight: 700; color: var(--azul); }
+.inf-portada-fecha { font-size: 0.82rem; color: var(--gris); margin: 6px 0; }
+.inf-confidencial { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--alert); margin: 18px 0 0; }
+.inf-portada-ancla { font-size: 0.78rem; color: var(--gris); line-height: 1.5; max-width: 460px; margin: 22px auto 0; font-style: italic; }
+
+/* KPIs y stats */
+.inf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.inf-kpi { background: #F8FAFC; border-radius: 8px; padding: 12px 14px; }
+.inf-kpi-num { font-size: 1.4rem; font-weight: 700; color: var(--azul); }
+.inf-kpi-lbl { font-size: 0.72rem; color: var(--texto); font-weight: 600; margin-top: 2px; }
+.inf-kpi-note { font-size: 0.62rem; color: var(--gris); line-height: 1.35; margin-top: 4px; }
+.inf-statline { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.inf-stat { border-left: 3px solid var(--acento); padding: 2px 0 2px 10px; }
+.inf-stat-num { font-size: 1.1rem; font-weight: 700; color: var(--azul); }
+.inf-stat-lbl { font-size: 0.68rem; color: var(--gris); }
+.inf-stat-note { font-size: 0.6rem; color: var(--gris); line-height: 1.35; margin-top: 3px; }
+
+/* Barras horizontales (pirámide, fuerza, obras) */
+.inf-bars { display: flex; flex-direction: column; gap: 5px; }
+.inf-bar-row { display: grid; grid-template-columns: 54px 1fr 44px; align-items: center; gap: 8px; }
+.inf-bar-lbl { font-size: 0.74rem; color: var(--texto); text-align: right; }
+.inf-bar-lbl-wide { font-size: 0.7rem; }
+.inf-bar-track { background: #EEF2F6; border-radius: 4px; height: 14px; overflow: hidden; }
+.inf-bar-fill { display: block; height: 100%; background: var(--azul); border-radius: 4px; }
+.inf-bar-acc { background: var(--acento); }
+.inf-bar-val { font-size: 0.74rem; font-variant-numeric: tabular-nums; color: var(--texto); }
+
+.inf-cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+
+/* Tablas del informe */
+.inf-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.inf-table td, .inf-table th { padding: 4px 8px; border-bottom: 1px solid var(--borde); text-align: left; }
+.inf-table th { color: var(--azul); font-weight: 600; }
+.inf-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.inf-table-wide { font-size: 0.7rem; }
+.inf-heat th { text-align: center; }
+.inf-heat-cell { color: #fff; font-weight: 700; text-align: center; }
+.inf-heat tfoot td { border-top: 2px solid var(--acento); font-weight: 700; }
+
+.inf-iia { font-size: 1.6rem; font-weight: 700; color: var(--azul); }
+.inf-aviso { font-size: 0.72rem; color: var(--warn); line-height: 1.45; margin: 6px 0 0; }
+.inf-aviso-block { background: #FFF7EC; border-left: 3px solid var(--warn); border-radius: 0 6px 6px 0; padding: 8px 11px; color: #8a5a0a; }
+
+/* Cuadrantes de riesgo (HTML, robusto para PDF) */
+.inf-quads { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inf-quad { border: 1px solid var(--borde); border-left: 4px solid var(--gris); border-radius: 0 8px 8px 0; padding: 8px 11px; }
+.inf-quad-prioritario { border-left-color: var(--alert); }
+.inf-quad-planificable { border-left-color: var(--warn); }
+.inf-quad-vocacion { border-left-color: var(--ambar, #E67E22); }
+.inf-quad-estable { border-left-color: var(--ok); }
+.inf-quad-h { font-weight: 700; font-size: 0.8rem; color: var(--azul); }
+.inf-quad-provs { font-size: 0.72rem; color: var(--texto); margin-top: 3px; }
+
+.inf-metodo { font-size: 0.78rem; color: var(--texto); line-height: 1.55; padding-left: 18px; margin: 0; }
+.inf-metodo li { margin-bottom: 7px; }
+.inf-fuente { font-size: 0.7rem; color: var(--gris); font-style: italic; margin-top: 12px; }
+.inf-cierre { font-size: 0.82rem; color: var(--texto); line-height: 1.6; }
+
+/* Escenario explorado (no diagnóstico) */
+.inf-escenario { border: 2px dashed var(--warn); }
+.inf-delta { text-align: center; font-weight: 700; }
+.inf-delta.is-mejor { color: var(--ok); }
+.inf-delta.is-peor { color: var(--alert); }
+
+/* Curva: gráfico por defecto, tabla de respaldo oculta salvo conmutación */
+.inf-fallback { display: none; }
+.inf-fallback-on .inf-chart { display: none; }
+.inf-fallback-on .inf-fallback { display: block; }
+
+@media print {
+  .no-print { display: none !important; }
+  .inf-sec { border: none; border-radius: 0; padding: 0 0 24px; page-break-after: always; }
+  .informe-doc { gap: 0; }
+}
+
 /* Control en vivo de Capacidad de acompañamiento (FAI) */
 .fai-control {
   display: flex;
